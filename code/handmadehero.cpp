@@ -23,6 +23,10 @@ GameOutputSound(game_state *GameState, game_sound_output_buffer *SoundBuffer, in
 			*sampleOut++ = sampleValue;
 			*sampleOut++ = sampleValue;
 			GameState->tSine += 2.0f*Pi32*1.0f / (real32)wavePeriod;
+			if(GameState->tSine > 2.0f*Pi32)
+			{
+				GameState->tSine -= 2.0f*Pi32;
+			}
 		}
 }
 
@@ -43,7 +47,7 @@ RenderWeirdGradient(game_Off_Screen_Buffer *Buffer, int XOffset, int YOffset)
 			uint8 Red = 0;
 			
 
-			if (X > Buffer->Width/2){
+			if (X > Buffer->Width/4){
 				Blue = 0;
 				Red = (uint8)(X + XOffset);
 				Green = (uint8)(Y + YOffset);
@@ -139,15 +143,3 @@ extern "C" GAME_GET_SOUND_SAMPLES(GameGetSoundSamples)
     GameOutputSound(GameState, SoundBuffer, GameState->ToneHz);
 }
 
-#if HANDMADE_WIN32
-#include "windows.h"
-BOOL WINAPI DllMain(
-    _In_  HINSTANCE hinstDLL,
-    _In_  DWORD fdwReason,
-    _In_  LPVOID lpvReserved
-                    )
-{
-    return(TRUE);
-}
-
-#endif
