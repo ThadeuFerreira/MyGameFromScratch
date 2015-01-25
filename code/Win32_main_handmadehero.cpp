@@ -680,10 +680,17 @@ LRESULT CALLBACK Win32MainWindowCallBack(
 			GlobalRunning = false;
 			//OutputDebugStringA("WM_CLOSE\n");
 		} break;
-		case WM_ACTIVATEAPP:
-		{
-			//OutputDebugStringA("WM_ACTIVATEAPP\n");
-		} break;
+        case WM_ACTIVATEAPP:
+        {
+            if(WParam == TRUE)
+            {
+                SetLayeredWindowAttributes(Window, RGB(0, 0, 0), 255, LWA_ALPHA);
+            }
+            else
+            {
+                SetLayeredWindowAttributes(Window, RGB(0, 0, 0), 64, LWA_ALPHA);
+            }
+        } break;
 		default:
 		{
 			Result =  DefWindowProc(Window, Message,WParam,LParam);
@@ -879,7 +886,7 @@ Win32CreateInitialWindow(HINSTANCE Instance)
 	if (RegisterClassA(&WindowClass))
 	{
 		HWND Window = CreateWindowExA(
-			0,
+			 WS_EX_TOPMOST|WS_EX_LAYERED,
 			WindowClass.lpszClassName,
 			"Handmade Hero",
 			WS_OVERLAPPEDWINDOW|WS_VISIBLE,

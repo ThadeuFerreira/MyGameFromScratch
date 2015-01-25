@@ -2,7 +2,7 @@
 
 set CommonCompilerFlags=-MT -nologo -Gm- -GR- -EHa- -Od -Oi -WX -W4 -wd4201 -wd4100 -wd4189 -DHANDMADE_INTERNAL=1 -DHANDMADE_SLOW=1 -DHANDMADE_WIN32=1 -FC -Z7
 set CommonLinkerFlags= -incremental:no -opt:ref user32.lib gdi32.lib winmm.lib
-set PdbFileName=%time:~3,2%-%time:~6,2%.pdb
+set PdbFileName=handmade_%random%.pdb
 
 REM TODO - can we just build both with one exe?
 

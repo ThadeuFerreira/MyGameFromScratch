@@ -174,13 +174,22 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
         GameState->PlayerX += (int)(10.0f*Controller->StickAverageX);
         GameState->PlayerY -= (int)(10.0f*Controller->StickAverageY);
 		
-		if( GameState->PlayerX <= 0)
+		if( GameState->PlayerX > Buffer->Width)
 		{
 			GameState->PlayerX = 0;
 		}
-		if( GameState->PlayerY <= 0)
+		if( GameState->PlayerY > Buffer->Height)
 		{
 			GameState->PlayerY = 0;
+		}
+		
+		if( GameState->PlayerX < 0)
+		{
+			GameState->PlayerX = Buffer->Width;
+		}
+		if( GameState->PlayerY < 0)
+		{
+			GameState->PlayerY = Buffer->Height;
 		}
         if(GameState->tJump > 0)
         {
