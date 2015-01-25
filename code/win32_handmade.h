@@ -3,12 +3,25 @@
 
 struct Win32_Off_Screen_Buffer
 {
+    // NOTE(casey): Pixels are always 32-bits wide, Memory Order BB GG RR XX
 	 BITMAPINFO Info;
 	 void *Memory;
 	 int Width;
 	 int Height;
 	 int Pitch;
 	 int BytesPerPixel;
+};
+
+struct win32_state
+{
+    uint64 TotalSize;
+    void *GameMemoryBlock;
+    
+    HANDLE RecordingHandle;
+    int InputRecordingIndex;
+
+    HANDLE PlaybackHandle;
+    int InputPlayingIndex;    
 };
 
 

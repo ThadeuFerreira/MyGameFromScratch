@@ -72,6 +72,7 @@ struct game_Off_Screen_Buffer
 	int Width;
 	int Height;
 	int Pitch;
+	int BytesPerPixel;
 };
 
 inline uint32
@@ -105,6 +106,8 @@ struct game_controller_input
     bool32 IsAnalog;    
     real32 StickAverageX;
     real32 StickAverageY;
+	real32 RightStickAverageX;
+    real32 RightStickAverageY;
     
     union
     {
@@ -194,6 +197,11 @@ struct game_state
     int BlueOffset;
     
     real32 tSine;
+	
+	int PlayerX;
+    int PlayerY;
+	bool32 PlayerColor;
+    real32 tJump;
 };
 
 
