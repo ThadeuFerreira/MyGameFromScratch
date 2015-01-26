@@ -1190,7 +1190,7 @@ Win32CreateInitialWindow(HINSTANCE Instance)
 								real32 SecondsLeftUntilFlip = (TargetSecondsPerFrame - FromBeginToAudioSeconds);
 								DWORD ExpectedBytesUntilFlip = (DWORD)((SecondsLeftUntilFlip/TargetSecondsPerFrame)*(real32)ExpectedSoundBytesPerFrame);
 
-								DWORD ExpectedFrameBoundaryByte = PlayCursor + ExpectedSoundBytesPerFrame;
+								DWORD ExpectedFrameBoundaryByte = PlayCursor + ExpectedBytesUntilFlip;
 							
 								DWORD SafeWriteCursor = WriteCursor;
 								if(SafeWriteCursor < PlayCursor)
