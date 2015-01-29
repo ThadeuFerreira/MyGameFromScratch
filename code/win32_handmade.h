@@ -12,6 +12,7 @@ struct Win32_Off_Screen_Buffer
 	 int BytesPerPixel;
 };
 
+#define WIN32_STATE_FILE_NAME_COUNT MAX_PATH
 struct win32_state
 {
     uint64 TotalSize;
@@ -21,7 +22,10 @@ struct win32_state
     int InputRecordingIndex;
 
     HANDLE PlaybackHandle;
-    int InputPlayingIndex;    
+    int InputPlayingIndex;
+
+    char EXEFileName[WIN32_STATE_FILE_NAME_COUNT];
+    char *OnePastLastEXEFileNameSlash;
 };
 
 

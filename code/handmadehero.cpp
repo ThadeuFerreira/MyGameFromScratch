@@ -36,7 +36,7 @@ RenderPlayer(game_Off_Screen_Buffer *Buffer, int PlayerX, int PlayerY, bool32 ch
     uint8 *EndOfBuffer = (uint8 *)Buffer->Memory + Buffer->Pitch*Buffer->Height;
 	uint32 Color;
 
-	if (!changeColor){
+	if (changeColor){
 		Color = 0xFFFFFFFF;
 	}
 	else
