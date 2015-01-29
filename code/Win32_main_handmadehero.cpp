@@ -296,9 +296,9 @@ Win32UnloadGameCode(win32_game_code *GameCode)
 internal void
 Win32GetInputFileLocation(win32_state *State, int SlotIndex, int DestCount, char *Dest)
 {
-    if (SlotIndex == 0){
+    Assert(SlotIndex == 1);
     Win32BuildEXEPathFileName(State, "loop_edit.hmi", DestCount, Dest);
-	}
+	
 }
 
 internal void
@@ -311,8 +311,11 @@ Win32BeginRecordingInput(win32_state *State, int InputRecordingIndex)
     char FileName[WIN32_STATE_FILE_NAME_COUNT];
     Win32GetInputFileLocation(State, InputRecordingIndex, sizeof(FileName), FileName);
 
-    State->RecordingHandle =
-        CreateFileA("c:\\handmadehero\\HandMadeHero\\build\\loop_edit.hmi", GENERIC_WRITE, 0, 0, CREATE_ALWAYS, 0, 0);
+   // State->RecordingHandle =
+     //   CreateFileA("c:\\handmadehero\\HandMadeHero\\build\\loop_edit.hmi", GENERIC_WRITE, 0, 0, CREATE_ALWAYS, 0, 0);
+	 
+	 State->RecordingHandle =
+        CreateFileA(FileName, GENERIC_WRITE, 0, 0, CREATE_ALWAYS, 0, 0);
 
     DWORD BytesToWrite = (DWORD)State->TotalSize;
     Assert(State->TotalSize == BytesToWrite);
@@ -976,7 +979,7 @@ Win32CreateInitialWindow(HINSTANCE Instance)
 			Win32ClearSoundBuffer(&soundOutput);
 			
 			GlobalRunning = true;
-			win32_state Win32State = {};
+
 			
 			int16 *Samples = (int16 *)VirtualAlloc(0, soundOutput.secondaryBufferSize,
                                                    MEM_RESERVE|MEM_COMMIT, PAGE_READWRITE);
