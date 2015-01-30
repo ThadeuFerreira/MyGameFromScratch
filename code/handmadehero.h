@@ -42,6 +42,12 @@ typedef double real64;
 /*
   NOTE(casey): Services that the platform layer provides to the game
 */
+
+struct thread_context
+{
+    int Placeholder;
+};
+
 #if HANDMADE_INTERNAL
 /* IMPORTANT(casey):
 
@@ -54,18 +60,25 @@ struct debug_read_file_result
     void *Contents;
 };
 
-#define DEBUG_PLATFORM_FREE_FILE_MEMORY(name) void name(void *Memory)
+#define DEBUG_PLATFORM_FREE_FILE_MEMORY(name) void name(thread_context *Thread, void *Memory)
 typedef DEBUG_PLATFORM_FREE_FILE_MEMORY(debug_platform_free_file_memory);
 
-#define DEBUG_PLATFORM_READ_ENTIRE_FILE(name) debug_read_file_result name(char *Filename)
+#define DEBUG_PLATFORM_READ_ENTIRE_FILE(name) debug_read_file_result name(thread_context *Thread, char *Filename)
 typedef DEBUG_PLATFORM_READ_ENTIRE_FILE(debug_platform_read_entire_file);
 
-#define DEBUG_PLATFORM_WRITE_ENTIRE_FILE(name) bool32 name(char *Filename, uint32 MemorySize, void *Memory)
+#define DEBUG_PLATFORM_WRITE_ENTIRE_FILE(name) bool32 name(thread_context *Thread, char *Filename, uint32 MemorySize, void *Memory)
 typedef DEBUG_PLATFORM_WRITE_ENTIRE_FILE(debug_platform_write_entire_file);
 
 #endif
 
+/*
+  NOTE(casey): Services that the game provides to the platform layer.
+  (this may expand in the future - sound on separate thread, etc.)
+*/
 
+// FOUR THINGS - timing, controller/keyboard input, bitmap buffer to use, sound buffer to use
+
+// TODO(casey): In the future, rendering _specifically_ will become a three-tiered abstraction!!!
 struct game_Off_Screen_Buffer
 {
 	void *Memory;
@@ -83,7 +96,6 @@ SafeTruncateUInt64(uint64 Value)
     uint32 Result = (uint32)Value;
     return(Result);
 }
-
 
 struct game_sound_output_buffer
 {
@@ -157,7 +169,10 @@ struct ButtonActions
 
 struct game_input
 {
-    game_controller_input Controllers[5];
+    game_button_state MouseButtons[5];
+    int32 MouseX, MouseY, MouseZ;
+	
+	game_controller_input Controllers[5];
 };
 
 struct game_memory
@@ -175,14 +190,14 @@ struct game_memory
     debug_platform_write_entire_file *DEBUGPlatformWriteEntireFile;
 };
 
-#define GAME_UPDATE_AND_RENDER(name) void name(game_memory *Memory, game_input *Input, game_Off_Screen_Buffer *Buffer)
+#define GAME_UPDATE_AND_RENDER(name) void name(thread_context *Thread, game_memory *Memory, game_input *Input, game_Off_Screen_Buffer *Buffer)
 typedef GAME_UPDATE_AND_RENDER(game_update_and_render);
 
 // NOTE(casey): At the moment, this has to be a very fast function, it cannot be
 // more than a millisecond or so.
 // TODO(casey): Reduce the pressure on this function's performance by measuring it
 // or asking about it, etc.
-#define GAME_GET_SOUND_SAMPLES(name) void name(game_memory *Memory, game_sound_output_buffer *SoundBuffer)
+#define GAME_GET_SOUND_SAMPLES(name) void name(thread_context *Thread, game_memory *Memory, game_sound_output_buffer *SoundBuffer)
 typedef GAME_GET_SOUND_SAMPLES(game_get_sound_samples);
 
 struct game_state
@@ -219,9 +234,6 @@ inline game_controller_input *GetController(game_input *Input, int unsigned Cont
     return(Result);
 }
 
-
-
-internal bool32 DEBUGPlatformWriteEntireFile(char *Filename, uint32 MemorySize, void *Memory);
 #endif
 
 #define HANDMADEHERO_H

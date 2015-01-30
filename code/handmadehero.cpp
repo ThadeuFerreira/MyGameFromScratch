@@ -111,11 +111,11 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
     {
 		char *Filename = "test.in";
         
-        debug_read_file_result File = Memory->DEBUGPlatformReadEntireFile(Filename);
+        debug_read_file_result File = Memory->DEBUGPlatformReadEntireFile(Thread, Filename);
         if(File.Contents)
         {
-            Memory->DEBUGPlatformWriteEntireFile("test_out.out", File.ContentsSize, File.Contents);
-            Memory->DEBUGPlatformFreeFileMemory(File.Contents);
+            Memory->DEBUGPlatformWriteEntireFile(Thread, "test_out.out", File.ContentsSize, File.Contents);
+            Memory->DEBUGPlatformFreeFileMemory(Thread, File.Contents);
         }
         GameState->ToneHz = 256;
 		GameState->tSine = 0.0f;
@@ -219,6 +219,16 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
 
 	RenderWeirdGradient(Buffer, GameState->BlueOffset, GameState->GreenOffset);
 	RenderPlayer(Buffer, GameState->PlayerX, GameState->PlayerY, GameState->PlayerColor);
+
+    for(int ButtonIndex = 0;
+        ButtonIndex < ArrayCount(Input->MouseButtons);
+        ++ButtonIndex)
+    {
+        if(Input->MouseButtons[ButtonIndex].EndedDown)
+        {
+            RenderPlayer(Buffer, 10 + 20*ButtonIndex, 10, !GameState->PlayerColor);
+        }
+    }
 }
 
 extern "C" GAME_GET_SOUND_SAMPLES(GameGetSoundSamples)
