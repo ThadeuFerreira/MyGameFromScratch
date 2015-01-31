@@ -745,7 +745,7 @@ LRESULT CALLBACK Win32MainWindowCallBack(
 	Win32LoadXInput();
 	LRESULT Result = 0;
 	Win32_Window_Dimension Dimension = Win32GetWindowDimension(Window);
-	Win32ResizeDIBSection(&GlobalBackBuffer, 1200, 720);
+	Win32ResizeDIBSection(&GlobalBackBuffer, 960, 540);
 	
 	switch(Message)
 	{
@@ -1071,6 +1071,8 @@ Win32CreateInitialWindow(HINSTANCE Instance)
 				game_input *NewInput = &Input[0];
 				game_input *OldInput = &Input[1];
 				
+				NewInput->SecondsToAdvanceOverUpdate = TargetSecondsPerFrame;
+				
                 LARGE_INTEGER LastCounter = Win32GetWallClock();
                 LARGE_INTEGER FlipWallClock = Win32GetWallClock();
 
@@ -1285,6 +1287,9 @@ Win32CreateInitialWindow(HINSTANCE Instance)
 							{
 								Win32PlayBackInput(&Win32State, NewInput);
 							}
+							
+							NewInput->SecondsToAdvanceOverUpdate = TargetSecondsPerFrame;
+							
 							Game.UpdateAndRender(&Thread, &GameMemory, NewInput, &Buffer);
 							LARGE_INTEGER AudioWallClock = Win32GetWallClock();
 							real32 FromBeginToAudioSeconds = Win32GetSecondsElapsed(FlipWallClock, AudioWallClock);

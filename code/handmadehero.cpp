@@ -4,7 +4,66 @@
 
 typedef unsigned long DWORD;
 
+internal int32
+RoundReal32ToInt32(real32 Real32)
+{
+    int32 Result = (int32)(Real32 + 0.5f);
+    // TODO(casey): Intrinsic????
+    return(Result);
+}
 
+
+internal void
+DrawRectangle(game_Off_Screen_Buffer *Buffer,
+              real32 RealMinX, real32 RealMinY, real32 RealMaxX, real32 RealMaxY,
+              uint32 Color)
+{
+    // TODO(casey): Floating point color tomorrow!!!!!!
+
+    int32 MinX = RoundReal32ToInt32(RealMinX);
+    int32 MinY = RoundReal32ToInt32(RealMinY);
+    int32 MaxX = RoundReal32ToInt32(RealMaxX);
+    int32 MaxY = RoundReal32ToInt32(RealMaxY);
+
+    if(MinX < 0)
+    {
+        MinX = 0;
+    }
+
+    if(MinY < 0)
+    {
+        MinY = 0;
+    }
+
+    if(MaxX > Buffer->Width)
+    {
+        MaxX = Buffer->Width;
+    }
+
+    if(MaxY > Buffer->Height)
+    {
+        MaxY = Buffer->Height;
+    }
+    
+
+    uint8 *Row = ((uint8 *)Buffer->Memory +
+                  MinX*Buffer->BytesPerPixel +
+                  MinY*Buffer->Pitch);
+    for(int Y = MinY;
+        Y < MaxY;
+        ++Y)
+    {
+        uint32 *Pixel = (uint32 *)Row;
+        for(int X = MinX;
+            X < MaxX;
+            ++X)
+        {            
+            *Pixel++ = Color;
+        }
+        
+        Row += Buffer->Pitch;
+    }
+}
 
 internal void 
 GameOutputSound(game_state *GameState, game_sound_output_buffer *SoundBuffer, int toneHz)
@@ -18,15 +77,21 @@ GameOutputSound(game_state *GameState, game_sound_output_buffer *SoundBuffer, in
 		int16 *sampleOut = (int16*)SoundBuffer->samples;
 		for (DWORD sampleIndex = 0; sampleIndex < (DWORD)SoundBuffer->sampleCount; ++sampleIndex)
 		{
+#if HANDMADE_DEBUGSOUND
 			real32 sineValue = sin(GameState->tSine);
 			int16 sampleValue = (int16)(sineValue * toneVolume);
+#else
+			int16 sampleValue = 0;
+#endif
 			*sampleOut++ = sampleValue;
 			*sampleOut++ = sampleValue;
+#if HANDMADE_DEBUGSOUND
 			GameState->tSine += 2.0f*Pi32*1.0f / (real32)wavePeriod;
 			if(GameState->tSine > 2.0f*Pi32)
 			{
 				GameState->tSine -= 2.0f*Pi32;
 			}
+#endif
 		}
 }
 
@@ -67,6 +132,7 @@ RenderPlayer(game_Off_Screen_Buffer *Buffer, int PlayerX, int PlayerY, bool32 ch
     }
 }
 
+#if HANDMADE_DEBUG
 internal void 
 RenderWeirdGradient(game_Off_Screen_Buffer *Buffer, int XOffset, int YOffset)
 {	
@@ -98,6 +164,8 @@ RenderWeirdGradient(game_Off_Screen_Buffer *Buffer, int XOffset, int YOffset)
 		Row += Buffer->Pitch;
 	}
 }
+
+#endif
 
 extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
 {
@@ -216,8 +284,11 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
 			}
 		}
 	}
-
-	RenderWeirdGradient(Buffer, GameState->BlueOffset, GameState->GreenOffset);
+	
+    DrawRectangle(Buffer, 0.0f, 0.0f, (real32)Buffer->Width, (real32)Buffer->Height, 0x00FF00FF);
+    DrawRectangle(Buffer, 10.0f, 10.0f, 40.0f, 40.0f, 0x0000FFFF);
+	
+	//RenderWeirdGradient(Buffer, GameState->BlueOffset, GameState->GreenOffset);
 	RenderPlayer(Buffer, GameState->PlayerX, GameState->PlayerY, GameState->PlayerColor);
 
     for(int ButtonIndex = 0;
