@@ -203,31 +203,7 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
     Assert(sizeof(game_state) <= Memory->PermanentStorageSize);
     
     game_state *GameState = (game_state *)Memory->PermanentStorage;
-	
-    if(!Memory->IsInitialized)
-    {
-		char *Filename = "test.in";
-        
-        debug_read_file_result File = Memory->DEBUGPlatformReadEntireFile(Thread, Filename);
-        if(File.Contents)
-        {
-            Memory->DEBUGPlatformWriteEntireFile(Thread, "test_out.out", File.ContentsSize, File.Contents);
-            Memory->DEBUGPlatformFreeFileMemory(Thread, File.Contents);
-        }
-        GameState->ToneHz = 256;
-		GameState->tSine = 0.0f;
-		
-		GameState->PlayerX = 100;
-        GameState->PlayerY = 100;
-
-        // TODO(casey): This may be more appropriate to do in the platform layer
-        Memory->IsInitialized = true;
-		
-		
-		
-    }
-	
-		static uint32 TileMap[18][33] =
+	 uint32 tempTileMap[18][33] =
 		{
         {1, 1, 1, 1,  1, 1, 1, 1,  0, 1, 1, 1,  1, 1, 1, 1, 1, 1, 1, 1, 1,  1, 1, 1, 1,  0, 1, 1, 1,  1, 1, 1, 1},
         {1, 1, 0, 0,  0, 1, 0, 0,  0, 0, 0, 0,  0, 1, 0, 0, 1, 1, 1, 1, 1,  1, 1, 1, 1,  0, 1, 1, 1,  1, 1, 1, 0},
@@ -248,6 +224,40 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
         {1, 1, 1, 1,  1, 0, 0, 0,  0, 0, 0, 0,  0, 1, 0, 0, 1, 1, 1, 1, 1,  1, 1, 1, 1,  0, 1, 1, 1,  1, 1, 1, 1},
         {1, 1, 1, 1,  1, 1, 1, 1,  0, 1, 1, 1,  1, 1, 1, 1, 1, 1, 1, 1, 1,  1, 1, 1, 1,  0, 1, 1, 1,  1, 1, 1, 0},
     };
+	
+	static bool32 fistState = true;
+	
+	if(fistState){
+		for(int Row = 0; Row < 18; Row++)
+		{
+			for(int Column = 0; Column < 33; Column++)
+			{
+			  GameState->TileMap[Row][Column] = tempTileMap[Row][Column];
+			}
+		}
+		fistState = false;
+	}
+    if(!Memory->IsInitialized)
+    {
+		char *Filename = "test.in";
+        
+        debug_read_file_result File = Memory->DEBUGPlatformReadEntireFile(Thread, Filename);
+        if(File.Contents)
+        {
+            Memory->DEBUGPlatformWriteEntireFile(Thread, "test_out.out", File.ContentsSize, File.Contents);
+            Memory->DEBUGPlatformFreeFileMemory(Thread, File.Contents);
+        }
+        GameState->ToneHz = 256;
+		GameState->tSine = 0.0f;
+		
+		GameState->PlayerX = 100;
+        GameState->PlayerY = 100;
+
+        // TODO(casey): This may be more appropriate to do in the platform layer
+        Memory->IsInitialized = true;
+		
+		
+    }
 	
 
 	
@@ -306,23 +316,23 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
 		if( GameState->PlayerX > Buffer->Width)
 		{
 			GameState->PlayerX = 0;
-			invertTitleMap(TileMap);
+			invertTitleMap(GameState->TileMap);
 		}
 		if( GameState->PlayerY > Buffer->Height)
 		{
 			GameState->PlayerY = 0;
-			invertTitleMap(TileMap);
+			invertTitleMap(GameState->TileMap);
 		}
 		
 		if( GameState->PlayerX < 0)
 		{
 			GameState->PlayerX = (real32)Buffer->Width;
-			invertTitleMap(TileMap);
+			invertTitleMap(GameState->TileMap);
 		}
 		if( GameState->PlayerY < 0)
 		{
 			GameState->PlayerY = (real32)Buffer->Height;
-			invertTitleMap(TileMap);
+			invertTitleMap(GameState->TileMap);
 		}
         if(GameState->tJump > 0)
         {
@@ -357,6 +367,7 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
     
     DrawRectangle(Buffer, 0.0f, 0.0f, (real32)Buffer->Width, (real32)Buffer->Height,
                   1.0f, 0.0f, 0.1f);
+				  
     for(int Row = 0;
         Row < 18;
         ++Row)
@@ -365,7 +376,7 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
             Column < 33;
             ++Column)
         {
-            uint32 TileID = TileMap[Row][Column];
+            uint32 TileID = GameState->TileMap[Row][Column];
             real32 Gray = 0.5f;
             if(TileID == 1)
             {

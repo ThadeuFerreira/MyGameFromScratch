@@ -214,6 +214,8 @@ struct game_state
     real32 PlayerY;
 	bool32 PlayerColor;
     real32 tJump;
+	
+	uint32 TileMap[18][33];
 };
 
 
