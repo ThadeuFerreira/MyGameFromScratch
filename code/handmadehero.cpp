@@ -299,8 +299,8 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
 		        // Input.AButtonEndedDown;
         // Input.AButtonHalfTransitionCount;
 
-        GameState->PlayerX += (int)(10.0f*Controller->StickAverageX);
-        GameState->PlayerY -= (int)(10.0f*Controller->StickAverageY);
+        GameState->PlayerX += (10.0f*Controller->StickAverageX);
+        GameState->PlayerY -= (10.0f*Controller->StickAverageY);
 		
 		
 		if( GameState->PlayerX > Buffer->Width)

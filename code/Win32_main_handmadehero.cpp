@@ -1071,8 +1071,6 @@ Win32CreateInitialWindow(HINSTANCE Instance)
 				game_input *NewInput = &Input[0];
 				game_input *OldInput = &Input[1];
 				
-				NewInput->dtForFrame = TargetSecondsPerFrame;
-				
                 LARGE_INTEGER LastCounter = Win32GetWallClock();
                 LARGE_INTEGER FlipWallClock = Win32GetWallClock();
 
@@ -1129,6 +1127,7 @@ Win32CreateInitialWindow(HINSTANCE Instance)
 					    POINT MouseP;
                         GetCursorPos(&MouseP);
                         ScreenToClient(Window, &MouseP);
+						NewInput->dtForFrame = TargetSecondsPerFrame;
                         NewInput->MouseX = MouseP.x;
                         NewInput->MouseY = MouseP.y;
                         NewInput->MouseZ = 0; // TODO(casey): Support mousewheel?
@@ -1288,7 +1287,6 @@ Win32CreateInitialWindow(HINSTANCE Instance)
 								Win32PlayBackInput(&Win32State, NewInput);
 							}
 							
-							NewInput->dtForFrame = TargetSecondsPerFrame;
 							
 							Game.UpdateAndRender(&Thread, &GameMemory, NewInput, &Buffer);
 							LARGE_INTEGER AudioWallClock = Win32GetWallClock();
