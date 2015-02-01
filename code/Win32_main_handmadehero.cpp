@@ -1071,7 +1071,7 @@ Win32CreateInitialWindow(HINSTANCE Instance)
 				game_input *NewInput = &Input[0];
 				game_input *OldInput = &Input[1];
 				
-				NewInput->SecondsToAdvanceOverUpdate = TargetSecondsPerFrame;
+				NewInput->dtForFrame = TargetSecondsPerFrame;
 				
                 LARGE_INTEGER LastCounter = Win32GetWallClock();
                 LARGE_INTEGER FlipWallClock = Win32GetWallClock();
@@ -1288,7 +1288,7 @@ Win32CreateInitialWindow(HINSTANCE Instance)
 								Win32PlayBackInput(&Win32State, NewInput);
 							}
 							
-							NewInput->SecondsToAdvanceOverUpdate = TargetSecondsPerFrame;
+							NewInput->dtForFrame = TargetSecondsPerFrame;
 							
 							Game.UpdateAndRender(&Thread, &GameMemory, NewInput, &Buffer);
 							LARGE_INTEGER AudioWallClock = Win32GetWallClock();
