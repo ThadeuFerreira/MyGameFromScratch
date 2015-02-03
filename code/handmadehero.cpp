@@ -4,14 +4,24 @@
 
 typedef unsigned long DWORD;
 
-internal int32
+#define TILE_MAP_COUNT_X 33
+#define TILE_MAP_COUNT_Y 18
+
+inline int32
 RoundReal32ToInt32(real32 Real32)
 {
-    int32 Result = (int32)(Real32 + 0.5f);
+	int32 Result;
+	if(Real32 >= 0 ){
+		Result = (int32)(Real32 + 0.5f);
+	}
+	else
+	{
+		Result = (int32)(Real32 - 0.5f);
+	}
     // TODO(casey): Intrinsic????
     return(Result);
 }
-internal uint32
+inline uint32
 RoundReal32ToUInt32(real32 Real32)
 {
     uint32 Result = (uint32)(Real32 + 0.5f);
@@ -139,6 +149,33 @@ RenderPlayer(game_Off_Screen_Buffer *Buffer, int PlayerX, int PlayerY, bool32 ch
     }
 }
 
+internal void
+moveTileMapPosition(uint32 TileMap[TILE_MAP_COUNT_Y][TILE_MAP_COUNT_X], 	int32 TileMapX,	int32 TileMapY)
+{
+	static uint32 updateRate = 0;
+	
+	if(!((updateRate++)%20)){
+	uint32 tempTileMap[TILE_MAP_COUNT_Y][TILE_MAP_COUNT_X];
+	for(int Row = 0; Row < TILE_MAP_COUNT_Y; Row++)
+	{
+		for(int Column = 0; Column < TILE_MAP_COUNT_X; Column++)
+		{
+		  tempTileMap[Row][Column] = TileMap[Row][Column];
+		}
+	}
+	
+	for(int Row = 0; Row < TILE_MAP_COUNT_Y; Row++)
+	{
+		for(int Column = 0; Column < TILE_MAP_COUNT_X; Column++)
+		{
+		  int32 YOffset = (Row - TileMapY)%TILE_MAP_COUNT_Y;
+
+		  int32 XOffset = (Column + TileMapX)%TILE_MAP_COUNT_X;
+		  TileMap[Row][Column] = tempTileMap[YOffset][XOffset];
+		}
+	}
+	}
+} 
 #if HANDMADE_DEBUG
 internal void 
 RenderWeirdGradient(game_Off_Screen_Buffer *Buffer, int XOffset, int YOffset)
@@ -203,7 +240,13 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
     Assert(sizeof(game_state) <= Memory->PermanentStorageSize);
     
     game_state *GameState = (game_state *)Memory->PermanentStorage;
-	 uint32 tempTileMap[18][33] =
+	
+    real32 UpperLeftX = -30;
+    real32 UpperLeftY = 0;
+    real32 TileWidth = 30;
+    real32 TileHeight = 30;
+	
+	uint32 tempTileMap[TILE_MAP_COUNT_Y][TILE_MAP_COUNT_X] =
 		{
         {1, 1, 1, 1,  1, 1, 1, 1,  0, 1, 1, 1,  1, 1, 1, 1, 1, 1, 1, 1, 1,  1, 1, 1, 1,  0, 1, 1, 1,  1, 1, 1, 1},
         {1, 1, 0, 0,  0, 1, 0, 0,  0, 0, 0, 0,  0, 1, 0, 0, 1, 1, 1, 1, 1,  1, 1, 1, 1,  0, 1, 1, 1,  1, 1, 1, 0},
@@ -212,11 +255,11 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
         {0, 0, 0, 0,  0, 1, 0, 0,  1, 0, 0, 0,  0, 0, 0, 0, 0, 1, 1, 1, 1,  1, 1, 0, 1,  0, 1, 1, 1,  1, 1, 1, 1},
         {1, 1, 0, 0,  0, 1, 0, 0,  1, 0, 0, 0,  0, 1, 0, 0, 1, 1, 1, 1, 1,  1, 1, 0, 1,  0, 1, 1, 1,  1, 1, 1, 0},
         {1, 0, 0, 0,  0, 1, 0, 0,  1, 0, 0, 0,  1, 0, 0, 0, 1, 1, 1, 0, 1,  1, 1, 0, 1,  0, 1, 1, 1,  1, 1, 0, 0},
-        {1, 1, 1, 1,  1, 0, 0, 0,  0, 0, 0, 0,  0, 1, 0, 0, 1, 1, 1, 1, 1,  1, 1, 0, 1,  0, 1, 1, 1,  1, 1, 1, 0},
-        {1, 1, 1, 1,  1, 1, 1, 1,  0, 1, 1, 1,  1, 1, 1, 1, 1, 1, 1, 1, 1,  1, 1, 0, 1,  0, 1, 1, 1,  1, 1, 0, 0},
-		{1, 1, 1, 1,  1, 1, 1, 1,  0, 1, 1, 1,  1, 1, 1, 1, 1, 1, 1, 1, 1,  1, 1, 0, 1,  0, 1, 1, 1,  1, 1, 0, 1},
-        {1, 1, 0, 0,  0, 1, 0, 0,  0, 0, 0, 0,  0, 1, 0, 0, 1, 1, 1, 1, 1,  1, 1, 1, 1,  0, 1, 1, 1,  1, 1, 0, 1},
-        {1, 1, 0, 0,  0, 0, 0, 0,  1, 0, 0, 0,  0, 0, 1, 0, 1, 1, 1, 1, 1,  1, 1, 1, 1,  0, 1, 1, 1,  1, 1, 0, 1},
+        {1, 1, 1, 1,  1, 0, 0, 0,  0, 0, 0, 0,  0, 1, 0, 0, 1, 1, 1, 1, 1,  1, 1, 0, 1,  0, 0, 1, 1,  1, 1, 1, 0},
+        {1, 1, 1, 1,  1, 1, 1, 1,  0, 1, 1, 1,  1, 1, 1, 1, 1, 1, 1, 1, 1,  1, 1, 0, 1,  0, 1, 0, 1,  1, 1, 1, 0},
+		{1, 1, 1, 1,  1, 1, 1, 1,  0, 1, 1, 1,  1, 1, 1, 1, 1, 1, 1, 1, 1,  1, 1, 0, 1,  0, 1, 1, 0,  1, 1, 1, 1},
+        {1, 1, 0, 0,  0, 1, 0, 0,  0, 0, 0, 0,  0, 1, 0, 0, 1, 1, 1, 1, 1,  1, 1, 1, 1,  0, 1, 1, 1,  0, 1, 1, 1},
+        {1, 1, 0, 0,  0, 0, 0, 0,  1, 0, 0, 0,  0, 0, 1, 0, 1, 1, 1, 1, 1,  1, 1, 1, 1,  0, 1, 1, 1,  1, 0, 1, 1},
         {1, 0, 0, 0,  0, 0, 0, 0,  1, 0, 0, 0,  0, 0, 0, 0, 1, 1, 1, 1, 1,  1, 1, 1, 1,  0, 1, 1, 1,  1, 1, 0, 1},
         {0, 0, 0, 0,  0, 1, 0, 0,  1, 0, 0, 0,  0, 0, 0, 0, 0, 1, 1, 1, 1,  1, 1, 1, 1,  0, 1, 1, 1,  1, 1, 0, 1},
         {1, 1, 0, 0,  0, 1, 0, 0,  1, 0, 0, 0,  0, 1, 0, 0, 1, 1, 1, 1, 1,  1, 1, 1, 1,  0, 1, 1, 1,  1, 1, 0, 1},
@@ -225,17 +268,21 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
         {1, 1, 1, 1,  1, 1, 1, 1,  0, 1, 1, 1,  1, 1, 1, 1, 1, 1, 1, 1, 1,  1, 1, 1, 1,  0, 1, 1, 1,  1, 1, 1, 0},
     };
 	
-	static bool32 fistState = true;
+	static bool32 firstState = true;
 	
-	if(fistState){
-		for(int Row = 0; Row < 18; Row++)
+	real32 moveX = 0;
+	
+	real32 moveY = 0;
+	
+	if(firstState){
+		for(int Row = 0; Row < TILE_MAP_COUNT_Y; Row++)
 		{
-			for(int Column = 0; Column < 33; Column++)
+			for(int Column = 0; Column < TILE_MAP_COUNT_X; Column++)
 			{
 			  GameState->TileMap[Row][Column] = tempTileMap[Row][Column];
 			}
 		}
-		fistState = false;
+		firstState = false;
 	}
     if(!Memory->IsInitialized)
     {
@@ -260,7 +307,6 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
     }
 	
 
-	
     for(int ControllerIndex = 0;
         ControllerIndex < ArrayCount(Input->Controllers);
         ++ControllerIndex)
@@ -300,8 +346,8 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
             dPlayerY *= 64.0f;
 
             // TODO(casey): Diagonal will be faster!  Fix once we have vectors :)
-            GameState->PlayerX += Input->dtForFrame*dPlayerX;
-            GameState->PlayerY += Input->dtForFrame*dPlayerY;
+            moveX = GameState->PlayerX + Input->dtForFrame*dPlayerX;
+            moveY = GameState->PlayerY +Input->dtForFrame*dPlayerY;
 		}
 
 		// Input.AButtonEndedDown;
@@ -312,7 +358,49 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
         GameState->PlayerX += (10.0f*Controller->StickAverageX);
         GameState->PlayerY -= (10.0f*Controller->StickAverageY);
 		
+		// moveX = GameState->PlayerX + (10.0f*Controller->StickAverageX);		
+		//moveY = GameState->PlayerY + (10.0f*Controller->StickAverageY);
 		
+		uint32 tileX = (uint32)((moveX - UpperLeftX)/TileWidth);
+		uint32 tileY = (uint32)((moveY - UpperLeftY)/TileWidth);
+		
+		if(GameState->TileMap[tileY][tileX] == 0)
+		{
+			GameState->PlayerX = moveX;
+			GameState->PlayerY = moveY;
+		}
+		else
+		{
+			int x = 10;
+		}
+		
+		GameState->TileMapY -= RoundReal32ToInt32(Controller->RightStickAverageY);
+		
+		GameState->TileMapX += RoundReal32ToInt32(Controller->RightStickAverageX);
+	
+		if( GameState->TileMapX > Buffer->Width)
+		{
+			GameState->TileMapX = 0;
+
+		}
+		if( GameState->TileMapY > Buffer->Height)
+		{
+			GameState->TileMapY = 0;
+
+		}
+		
+		if( GameState->TileMapX < 0)
+		{
+			GameState->TileMapX = Buffer->Width;
+
+		}
+		if( GameState->TileMapY < 0)
+		{
+			GameState->TileMapY = Buffer->Height;
+		}
+		
+		//setTileMapPosition(GameState->TileMap, GameState->TileMapX, GameState->TileMapY);
+		moveTileMapPosition(GameState->TileMap, 0, 0);
 		if( GameState->PlayerX > Buffer->Width)
 		{
 			GameState->PlayerX = 0;
@@ -360,13 +448,8 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
 		}
 	}
 
-    real32 UpperLeftX = -30;
-    real32 UpperLeftY = 0;
-    real32 TileWidth = 30;
-    real32 TileHeight = 30;
     
-    DrawRectangle(Buffer, 0.0f, 0.0f, (real32)Buffer->Width, (real32)Buffer->Height,
-                  1.0f, 0.0f, 0.1f);
+
 				  
     for(int Row = 0;
         Row < 18;
@@ -387,7 +470,7 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
             real32 MinY = UpperLeftY + ((real32)Row)*TileHeight;
             real32 MaxX = MinX + TileWidth;
             real32 MaxY = MinY + TileHeight;
-            DrawRectangle(Buffer, MinX, MinY, MaxX, MaxY, Gray, Gray, Gray);
+            DrawRectangle(Buffer, MinX , MinY , MaxX, MaxY , Gray, Gray, Gray);
         }
     }
     

@@ -79,6 +79,20 @@ typedef DEBUG_PLATFORM_WRITE_ENTIRE_FILE(debug_platform_write_entire_file);
 // FOUR THINGS - timing, controller/keyboard input, bitmap buffer to use, sound buffer to use
 
 // TODO(casey): In the future, rendering _specifically_ will become a three-tiered abstraction!!!
+
+struct tile_map
+{
+    int32 CountX;
+    int32 CountY;
+    
+    real32 UpperLeftX;
+    real32 UpperLeftY;
+    real32 TileWidth;
+    real32 TileHeight;
+
+    uint32 *Tiles;
+};
+
 struct game_Off_Screen_Buffer
 {
 	void *Memory;
@@ -202,6 +216,15 @@ typedef GAME_UPDATE_AND_RENDER(game_update_and_render);
 #define GAME_GET_SOUND_SAMPLES(name) void name(thread_context *Thread, game_memory *Memory, game_sound_output_buffer *SoundBuffer)
 typedef GAME_GET_SOUND_SAMPLES(game_get_sound_samples);
 
+struct world
+{
+    // TODO(casey): Beginner's sparseness
+    int32 TileMapCountX;
+    int32 TileMapCountY;
+    
+    tile_map *TileMaps;
+};
+
 struct game_state
 {
     int ToneHz;
@@ -212,10 +235,13 @@ struct game_state
 	
 	real32 PlayerX;
     real32 PlayerY;
+	int32 TileMapX;
+	int32 TileMapY;
 	bool32 PlayerColor;
     real32 tJump;
 	
 	uint32 TileMap[18][33];
+	tile_map TileMaps;
 };
 
 

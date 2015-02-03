@@ -684,20 +684,27 @@ Win32InitDSound(HWND Window, int32 samplesPerSecond, int32 BufferSize)
 	}
 }
 
-internal void 
-Win32UpdateWindow( Win32_Off_Screen_Buffer *Buffer, HDC DeviceContext,
-					int WindowWidth, int WindowHeight)
+internal void
+Win32DisplayBufferInWindow(Win32_Off_Screen_Buffer *Buffer,
+                           HDC DeviceContext, int WindowWidth, int WindowHeight)
 {
+    int OffsetX = 10;
+    int OffsetY = 10;
 
-	StretchDIBits(	DeviceContext,
-		0, 0, Buffer->Width, Buffer->Height,
-		0, 0, Buffer->Width, Buffer->Height,
-		Buffer->Memory,
-		&Buffer->Info,
-		DIB_RGB_COLORS,
-		SRCCOPY
-		);
-
+    PatBlt(DeviceContext, 0, 0, WindowWidth, OffsetY, BLACKNESS);
+    PatBlt(DeviceContext, 0, OffsetY + Buffer->Height, WindowWidth, WindowHeight, BLACKNESS);
+    PatBlt(DeviceContext, 0, 0, OffsetX, WindowHeight, BLACKNESS);
+    PatBlt(DeviceContext, OffsetX + Buffer->Width, 0, WindowWidth, WindowHeight, BLACKNESS);
+    
+    // NOTE(casey): For prototyping purposes, we're going to always blit
+    // 1-to-1 pixels to make sure we don't introduce artifacts with
+    // stretching while we are learning to code the renderer!
+    StretchDIBits(DeviceContext,
+                  OffsetX, OffsetY, Buffer->Width, Buffer->Height,
+                  0, 0, Buffer->Width, Buffer->Height,
+                  Buffer->Memory,
+                  &Buffer->Info,
+                  DIB_RGB_COLORS, SRCCOPY);
 }
 
 internal void 
@@ -755,7 +762,7 @@ LRESULT CALLBACK Win32MainWindowCallBack(
             HDC DeviceContext = BeginPaint(Window, &Paint);
 			
 			Win32_Window_Dimension Dimension = Win32GetWindowDimension(Window);
-			Win32UpdateWindow(&GlobalBackBuffer, DeviceContext, Dimension.Width, Dimension.Height);
+			Win32DisplayBufferInWindow(&GlobalBackBuffer, DeviceContext, Dimension.Width, Dimension.Height);
 			EndPaint(Window, &Paint);
 		} break;
 		case WM_SIZE:
@@ -1462,7 +1469,7 @@ Win32CreateInitialWindow(HINSTANCE Instance)
 	#endif
 	                    Win32_Window_Dimension Dimensiton = Win32GetWindowDimension(Window);
                         HDC DeviceContext = GetDC(Window);
-						Win32UpdateWindow(&GlobalBackBuffer, DeviceContext, Dimensiton.Width, Dimensiton.Height);
+						Win32DisplayBufferInWindow(&GlobalBackBuffer, DeviceContext, Dimensiton.Width, Dimensiton.Height);
                         ReleaseDC(Window, DeviceContext);
 							FlipWallClock = Win32GetWallClock();
 	#if HANDMADE_INTERNAL
