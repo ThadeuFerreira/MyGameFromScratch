@@ -232,7 +232,6 @@ struct game_state
     int BlueOffset;
     
     real32 tSine;
-	
 	real32 PlayerX;
     real32 PlayerY;
 	int32 TileMapX;
@@ -240,7 +239,6 @@ struct game_state
 	bool32 PlayerColor;
     real32 tJump;
 	
-	uint32 TileMap[18][33];
 	tile_map TileMaps;
 };
 

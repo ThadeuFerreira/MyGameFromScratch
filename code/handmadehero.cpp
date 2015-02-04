@@ -8,6 +8,13 @@ typedef unsigned long DWORD;
 #define TILE_MAP_COUNT_Y 18
 
 inline int32
+TruncateReal32ToInt32(real32 Real32)
+{
+    int32 Result = (int32)Real32;
+    return(Result);
+}
+
+inline int32
 RoundReal32ToInt32(real32 Real32)
 {
 	int32 Result;
@@ -27,6 +34,45 @@ RoundReal32ToUInt32(real32 Real32)
     uint32 Result = (uint32)(Real32 + 0.5f);
     // TODO(casey): Intrinsic????
     return(Result);
+}
+
+inline uint32
+GetTileValueUnchecked(tile_map *TileMap, int32 TileX, int32 TileY)
+{
+    uint32 TileMapValue = TileMap->Tiles[TileY*TileMap->CountX + TileX];
+    return(TileMapValue);
+}
+
+inline tile_map *
+GetTileMap(world *World, int32 TileMapX, int32 TileMapY)
+{
+    tile_map *TileMap = 0;
+
+    if((TileMapX >= 0) && (TileMapX < World->TileMapCountX) &&
+       (TileMapY >= 0) && (TileMapY < World->TileMapCountY))
+    {
+        TileMap = &World->TileMaps[TileMapY*World->TileMapCountX + TileMapX];
+    }
+
+    return(TileMap);
+}
+
+internal bool32
+IsTileMapPointEmpty(tile_map *TileMap, real32 TestX, real32 TestY)
+{
+    bool32 Empty = false;
+
+    int32 PlayerTileX = TruncateReal32ToInt32((TestX - TileMap->UpperLeftX) / TileMap->TileWidth);
+    int32 PlayerTileY = TruncateReal32ToInt32((TestY - TileMap->UpperLeftY) / TileMap->TileHeight);
+
+    if((PlayerTileX >= 0) && (PlayerTileX < TileMap->CountX) &&
+       (PlayerTileY >= 0) && (PlayerTileY < TileMap->CountY))
+    {
+        uint32 TileMapValue = GetTileValueUnchecked(TileMap, PlayerTileX, PlayerTileY);
+        Empty = (TileMapValue == 0);
+    }
+
+    return(Empty);
 }
 
 internal void
@@ -150,86 +196,76 @@ RenderPlayer(game_Off_Screen_Buffer *Buffer, int PlayerX, int PlayerY, bool32 ch
 }
 
 internal void
-moveTileMapPosition(uint32 TileMap[TILE_MAP_COUNT_Y][TILE_MAP_COUNT_X], 	int32 TileMapX,	int32 TileMapY)
+moveTileMapPosition(tile_map *TileMap, 	int32 TileMapX,	int32 TileMapY)
 {
 	static uint32 updateRate = 0;
 	
-	if(!((updateRate++)%20)){
-	uint32 tempTileMap[TILE_MAP_COUNT_Y][TILE_MAP_COUNT_X];
-	for(int Row = 0; Row < TILE_MAP_COUNT_Y; Row++)
+	if(!((updateRate++)%20))
 	{
-		for(int Column = 0; Column < TILE_MAP_COUNT_X; Column++)
+	tile_map tempTileMap;
+		for(int Row = 0; Row < TILE_MAP_COUNT_Y; Row++)
 		{
-		  tempTileMap[Row][Column] = TileMap[Row][Column];
+			for(int Column = 0; Column < TILE_MAP_COUNT_X; Column++)
+			{
+			  tempTileMap.Tiles = TileMap->Tiles;
+			}
 		}
-	}
-	
-	for(int Row = 0; Row < TILE_MAP_COUNT_Y; Row++)
-	{
-		for(int Column = 0; Column < TILE_MAP_COUNT_X; Column++)
+		
+		/*for(int Row = 0; Row < TILE_MAP_COUNT_Y; Row++)
 		{
-		  int32 YOffset = (Row - TileMapY)%TILE_MAP_COUNT_Y;
+			for(int Column = 0; Column < TILE_MAP_COUNT_X; Column++)
+			{
+			  int32 YOffset = (Row - TileMapY)%TILE_MAP_COUNT_Y;
 
-		  int32 XOffset = (Column + TileMapX)%TILE_MAP_COUNT_X;
-		  TileMap[Row][Column] = tempTileMap[YOffset][XOffset];
-		}
-	}
+			  int32 XOffset = (Column + TileMapX)%TILE_MAP_COUNT_X;
+			  TileMap[Row][Column] = tempTileMap[YOffset][XOffset];
+			}
+		}*/
 	}
 } 
-#if HANDMADE_DEBUG
-internal void 
-RenderWeirdGradient(game_Off_Screen_Buffer *Buffer, int XOffset, int YOffset)
-{	
 
-	uint8 *Row = (uint8 *) Buffer->Memory;
-	
-	for(int Y = 0; Y < Buffer->Height; ++Y)
-	{
-		uint32 *Pixel = (uint32 *) Row;
-		for(int X = 0; X < Buffer->Width; ++X)
-		{
-			uint8 Blue = 0;
-			uint8 Green = 0 ;
-			uint8 Red = 0;
-			
-
-			if (X > Buffer->Width/2){
-				Blue = 0;
-				Red = (uint8)(X + XOffset);
-				Green = (uint8)(Y + YOffset);
-			}else
-			{
-				Blue = (uint8)(X + XOffset);
-				Green = (uint8)(Y + YOffset);
-				Red = 0;
-			}
-			*Pixel++ = ((Red<<16)|(Green<<8)|Blue);
-		}
-		Row += Buffer->Pitch;
-	}
-}
-
-#endif
 
 internal void
-invertTitleMap(uint32 TitleMap[18][33])
+invertTitleMap(tile_map *TileMap)
 {
-	for(int Row = 0; Row < 18; Row++)
+	for(int Row = 0; Row < TILE_MAP_COUNT_Y; Row++)
 	{
-		for(int Column = 0; Column < 33; Column++)
+		for(int Column = 0; Column < TILE_MAP_COUNT_X; Column++)
 		{
-            if(TitleMap[Row][Column] == 1)
+            if(TileMap->Tiles[Row*TileMap->CountX + Column] == 1)
             {
-                TitleMap[Row][Column]= 0;
+                TileMap->Tiles[Row*TileMap->CountX + Column] = 0; 
             }
 			else
 			{
-				TitleMap[Row][Column]= 1;
+				TileMap->Tiles[Row*TileMap->CountX + Column] = 1;
 			}
 		
 		}
 	}
 
+}
+
+internal bool32
+IsWorldPointEmpty(world *World, int32 TileMapX, int32 TileMapY, real32 TestX, real32 TestY)
+{
+    bool32 Empty = false;
+
+    tile_map *TileMap = GetTileMap(World, TileMapX, TileMapY);
+    if(TileMap)
+    {
+        int32 PlayerTileX = TruncateReal32ToInt32((TestX - TileMap->UpperLeftX) / TileMap->TileWidth);
+        int32 PlayerTileY = TruncateReal32ToInt32((TestY - TileMap->UpperLeftY) / TileMap->TileHeight);
+
+        if((PlayerTileX >= 0) && (PlayerTileX < TileMap->CountX) &&
+           (PlayerTileY >= 0) && (PlayerTileY < TileMap->CountY))
+        {
+            uint32 TileMapValue = GetTileValueUnchecked(TileMap, PlayerTileX, PlayerTileY);
+            Empty = (TileMapValue == 0);
+        }
+    }
+    
+    return(Empty);
 }
 
 extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
@@ -241,49 +277,141 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
     
     game_state *GameState = (game_state *)Memory->PermanentStorage;
 	
-    real32 UpperLeftX = -30;
+    real32 UpperLeftX = -15;
     real32 UpperLeftY = 0;
-    real32 TileWidth = 30;
-    real32 TileHeight = 30;
+    real32 TileWidth = 15;
+    real32 TileHeight = 15;
 	
-	uint32 tempTileMap[TILE_MAP_COUNT_Y][TILE_MAP_COUNT_X] =
+	uint32 Tiles00[TILE_MAP_COUNT_Y][TILE_MAP_COUNT_X] =
 		{
-        {1, 1, 1, 1,  1, 1, 1, 1,  0, 1, 1, 1,  1, 1, 1, 1, 1, 1, 1, 1, 1,  1, 1, 1, 1,  0, 1, 1, 1,  1, 1, 1, 1},
-        {1, 1, 0, 0,  0, 1, 0, 0,  0, 0, 0, 0,  0, 1, 0, 0, 1, 1, 1, 1, 1,  1, 1, 1, 1,  0, 1, 1, 1,  1, 1, 1, 0},
-        {1, 1, 0, 0,  0, 0, 0, 0,  1, 0, 0, 0,  0, 0, 1, 0, 1, 1, 1, 1, 1,  1, 1, 1, 1,  0, 1, 1, 1,  1, 1, 1, 1},
-        {1, 0, 0, 0,  0, 0, 0, 0,  1, 0, 0, 0,  0, 0, 0, 0, 1, 1, 1, 1, 1,  1, 1, 0, 1,  0, 1, 1, 1,  1, 1, 1, 1},
-        {0, 0, 0, 0,  0, 1, 0, 0,  1, 0, 0, 0,  0, 0, 0, 0, 0, 1, 1, 1, 1,  1, 1, 0, 1,  0, 1, 1, 1,  1, 1, 1, 1},
-        {1, 1, 0, 0,  0, 1, 0, 0,  1, 0, 0, 0,  0, 1, 0, 0, 1, 1, 1, 1, 1,  1, 1, 0, 1,  0, 1, 1, 1,  1, 1, 1, 0},
-        {1, 0, 0, 0,  0, 1, 0, 0,  1, 0, 0, 0,  1, 0, 0, 0, 1, 1, 1, 0, 1,  1, 1, 0, 1,  0, 1, 1, 1,  1, 1, 0, 0},
-        {1, 1, 1, 1,  1, 0, 0, 0,  0, 0, 0, 0,  0, 1, 0, 0, 1, 1, 1, 1, 1,  1, 1, 0, 1,  0, 0, 1, 1,  1, 1, 1, 0},
-        {1, 1, 1, 1,  1, 1, 1, 1,  0, 1, 1, 1,  1, 1, 1, 1, 1, 1, 1, 1, 1,  1, 1, 0, 1,  0, 1, 0, 1,  1, 1, 1, 0},
-		{1, 1, 1, 1,  1, 1, 1, 1,  0, 1, 1, 1,  1, 1, 1, 1, 1, 1, 1, 1, 1,  1, 1, 0, 1,  0, 1, 1, 0,  1, 1, 1, 1},
-        {1, 1, 0, 0,  0, 1, 0, 0,  0, 0, 0, 0,  0, 1, 0, 0, 1, 1, 1, 1, 1,  1, 1, 1, 1,  0, 1, 1, 1,  0, 1, 1, 1},
-        {1, 1, 0, 0,  0, 0, 0, 0,  1, 0, 0, 0,  0, 0, 1, 0, 1, 1, 1, 1, 1,  1, 1, 1, 1,  0, 1, 1, 1,  1, 0, 1, 1},
-        {1, 0, 0, 0,  0, 0, 0, 0,  1, 0, 0, 0,  0, 0, 0, 0, 1, 1, 1, 1, 1,  1, 1, 1, 1,  0, 1, 1, 1,  1, 1, 0, 1},
-        {0, 0, 0, 0,  0, 1, 0, 0,  1, 0, 0, 0,  0, 0, 0, 0, 0, 1, 1, 1, 1,  1, 1, 1, 1,  0, 1, 1, 1,  1, 1, 0, 1},
-        {1, 1, 0, 0,  0, 1, 0, 0,  1, 0, 0, 0,  0, 1, 0, 0, 1, 1, 1, 1, 1,  1, 1, 1, 1,  0, 1, 1, 1,  1, 1, 0, 1},
-        {1, 0, 0, 0,  0, 1, 0, 0,  1, 0, 0, 0,  1, 0, 0, 0, 1, 1, 1, 1, 1,  1, 1, 1, 1,  0, 1, 1, 1,  1, 1, 1, 1},
-        {1, 1, 1, 1,  1, 0, 0, 0,  0, 0, 0, 0,  0, 1, 0, 0, 1, 1, 1, 1, 1,  1, 1, 1, 1,  0, 1, 1, 1,  1, 1, 1, 1},
-        {1, 1, 1, 1,  1, 1, 1, 1,  0, 1, 1, 1,  1, 1, 1, 1, 1, 1, 1, 1, 1,  1, 1, 1, 1,  0, 1, 1, 1,  1, 1, 1, 0},
+        {1, 1, 1, 1,  1, 1, 1, 1,  1, 1, 1, 1,  1, 1, 1, 1, 1, 1, 1, 1, 1,  1, 1, 1, 1,  1, 1, 1, 1,  1, 1, 1, 1},
+        {1, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 1},
+        {1, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 1},
+        {1, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 1},
+        {1, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 1},
+        {1, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 1},
+        {1, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 1},
+        {1, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 1},
+        {1, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 1},
+		{1, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 1},
+        {1, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 1},
+        {1, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 1},
+        {1, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 1},
+        {1, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 1},
+        {1, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 1},
+        {1, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 1},
+        {1, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 1},
+        {1, 1, 1, 1,  1, 1, 1, 1,  1, 1, 1, 1,  1, 1, 1, 1, 1, 1, 1, 1, 1,  1, 1, 1, 1,  0, 1, 1, 1,  1, 1, 1, 1},
     };
 	
-	static bool32 firstState = true;
+	    uint32 Tiles01[TILE_MAP_COUNT_Y][TILE_MAP_COUNT_X] =
+    {
+        {1, 1, 1, 1,  1, 1, 1, 1,  0, 1, 1, 1,  1, 1, 1, 1, 1, 1, 1, 1, 1,  1, 1, 1, 1,  0, 1, 1, 1,  1, 1, 1, 1},
+        {1, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0, 1, 1, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0},
+        {1, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0, 1, 1, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0},
+        {1, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0, 1, 1, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0},
+        {1, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0, 0, 1, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0},
+        {1, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0, 1, 1, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0},
+        {1, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0, 1, 1, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0},
+        {1, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0, 1, 1, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0},
+        {1, 1, 1, 1,  1, 1, 1, 1,  1, 1, 1, 1,  1, 1, 1, 1, 1, 1, 1, 1, 1,  1, 1, 1, 1,  1, 1, 1, 1,  1, 1, 1, 1},
+		{1, 1, 1, 1,  1, 1, 1, 1,  0, 1, 1, 1,  1, 1, 1, 1, 1, 1, 1, 1, 1,  1, 1, 1, 1,  0, 1, 1, 1,  1, 1, 1, 1},
+        {1, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0, 1, 1, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0},
+        {1, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0, 1, 1, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0},
+        {1, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0, 1, 1, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0},
+        {1, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0, 0, 1, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0},
+        {1, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0, 1, 1, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0},
+        {1, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0, 1, 1, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0},
+        {1, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0, 1, 1, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0},
+        {1, 1, 1, 1,  1, 1, 1, 1,  1, 1, 1, 1,  1, 1, 1, 1, 1, 1, 1, 1, 1,  1, 1, 1, 1,  1, 1, 1, 1,  1, 1, 1, 1},
+    };
+    
+    uint32 Tiles10[TILE_MAP_COUNT_Y][TILE_MAP_COUNT_X] =
+    {
+        {1, 1, 1, 1,  1, 1, 1, 1,  1, 1, 1, 1,  1, 1, 1, 1, 1, 1, 1, 1, 1,  1, 1, 1, 1,  1, 1, 1, 1,  1, 1, 1, 1},
+        {1, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0, 1, 1, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0},
+        {1, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0, 1, 1, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0},
+        {1, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0, 1, 1, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0},
+        {0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0, 1, 0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0},
+        {1, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0, 1, 1, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0},
+        {1, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0, 1, 1, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0},
+        {1, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0, 1, 1, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0},
+        {1, 1, 1, 1,  1, 1, 1, 1,  0, 1, 1, 1,  1, 1, 1, 1, 1, 1, 1, 1, 1,  1, 1, 1, 1,  0, 1, 1, 1,  1, 1, 1, 1},
+		{1, 1, 1, 1,  1, 1, 1, 1,  1, 1, 1, 1,  1, 1, 1, 1, 1, 1, 1, 1, 1,  1, 1, 1, 1,  1, 1, 1, 1,  1, 1, 1, 1},
+        {1, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0, 1, 1, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0},
+        {1, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0, 1, 1, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0},
+        {1, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0, 1, 1, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0},
+        {0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0, 1, 0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0},
+        {1, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0, 1, 1, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0},
+        {1, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0, 1, 1, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0},
+        {1, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0, 1, 1, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0},
+        {1, 1, 1, 1,  1, 1, 1, 1,  0, 1, 1, 1,  1, 1, 1, 1, 1, 1, 1, 1, 1,  1, 1, 1, 1,  0, 1, 1, 1,  1, 1, 1, 1},
+    };
+    
+    uint32 Tiles11[TILE_MAP_COUNT_Y][TILE_MAP_COUNT_X] =
+    {
+        {1, 1, 1, 1,  1, 1, 1, 1,  0, 1, 1, 1,  1, 1, 1, 1, 1, 1, 1, 1, 1,  1, 1, 1, 1,  0, 1, 1, 1,  1, 1, 1, 1},
+        {1, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0, 1, 1, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0},
+        {1, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0, 1, 1, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0},
+        {1, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0, 1, 1, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0},
+        {0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0, 1, 0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0},
+        {1, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0, 1, 1, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0},
+        {1, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0, 1, 1, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0},
+        {1, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0, 1, 1, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0},
+        {1, 1, 1, 1,  1, 1, 1, 1,  1, 1, 1, 1,  1, 1, 1, 1, 1, 1, 1, 1, 1,  1, 1, 1, 1,  1, 1, 1, 1,  1, 1, 1, 1},
+		{1, 1, 1, 1,  1, 1, 1, 1,  0, 1, 1, 1,  1, 1, 1, 1, 1, 1, 1, 1, 1,  1, 1, 1, 1,  0, 1, 1, 1,  1, 1, 1, 1},
+        {1, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0, 1, 1, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0},
+        {1, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0, 1, 1, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0},
+        {1, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0, 1, 1, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0},
+        {0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0, 1, 0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0},
+        {1, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0, 1, 1, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0},
+        {1, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0, 1, 1, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0},
+        {1, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0, 1, 1, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0},
+        {1, 1, 1, 1,  1, 1, 1, 1,  1, 1, 1, 1,  1, 1, 1, 1, 1, 1, 1, 1, 1,  1, 1, 1, 1,  1, 1, 1, 1,  1, 1, 1, 1},
+    };
+	
 	
 	real32 moveX = 0;
 	
 	real32 moveY = 0;
 	
-	if(firstState){
-		for(int Row = 0; Row < TILE_MAP_COUNT_Y; Row++)
-		{
-			for(int Column = 0; Column < TILE_MAP_COUNT_X; Column++)
-			{
-			  GameState->TileMap[Row][Column] = tempTileMap[Row][Column];
-			}
-		}
-		firstState = false;
+	tile_map TileMaps[2][2];
+    TileMaps[0][0].CountX = TILE_MAP_COUNT_X;
+    TileMaps[0][0].CountY = TILE_MAP_COUNT_Y;
+    
+    TileMaps[0][0].UpperLeftX = -15;
+    TileMaps[0][0].UpperLeftY = 0;
+    TileMaps[0][0].TileWidth = 30;
+    TileMaps[0][0].TileHeight = 30;
+
+    TileMaps[0][0].Tiles = (uint32 *)Tiles00;
+
+    TileMaps[0][1] = TileMaps[0][0];
+    TileMaps[0][1].Tiles = (uint32 *)Tiles01;
+
+    TileMaps[1][0] = TileMaps[0][0];
+    TileMaps[1][0].Tiles = (uint32 *)Tiles10;
+
+    TileMaps[1][1] = TileMaps[0][0];
+    TileMaps[1][1].Tiles = (uint32 *)Tiles11;
+	
+	static bool32 loadTileMap = true;
+	tile_map *TileMap = &TileMaps[0][0];
+	if(!loadTileMap)
+	{
+		invertTitleMap(TileMap);
 	}
+
+
+    world World;
+    World.TileMapCountX = 2;
+    World.TileMapCountY = 2;
+
+    World.TileMaps = (tile_map *)TileMaps;
+    
+    real32 PlayerWidth = 0.75f*TileMap->TileWidth;
+    real32 PlayerHeight = TileMap->TileHeight;
+	
     if(!Memory->IsInitialized)
     {
 		char *Filename = "test.in";
@@ -364,8 +492,10 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
 		uint32 tileX = (uint32)((moveX - UpperLeftX)/TileWidth);
 		uint32 tileY = (uint32)((moveY - UpperLeftY)/TileWidth);
 		
-		if(GameState->TileMap[tileY][tileX] == 0)
-		{
+		if(IsTileMapPointEmpty(TileMap, moveX - 0.5f*PlayerWidth, moveY) &&
+               IsTileMapPointEmpty(TileMap, moveX + 0.5f*PlayerWidth, moveY) &&
+               IsTileMapPointEmpty(TileMap, moveX, moveY))
+        {
 			GameState->PlayerX = moveX;
 			GameState->PlayerY = moveY;
 		}
@@ -374,53 +504,31 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
 			int x = 10;
 		}
 		
-		GameState->TileMapY -= RoundReal32ToInt32(Controller->RightStickAverageY);
-		
-		GameState->TileMapX += RoundReal32ToInt32(Controller->RightStickAverageX);
+
 	
-		if( GameState->TileMapX > Buffer->Width)
-		{
-			GameState->TileMapX = 0;
-
-		}
-		if( GameState->TileMapY > Buffer->Height)
-		{
-			GameState->TileMapY = 0;
-
-		}
-		
-		if( GameState->TileMapX < 0)
-		{
-			GameState->TileMapX = Buffer->Width;
-
-		}
-		if( GameState->TileMapY < 0)
-		{
-			GameState->TileMapY = Buffer->Height;
-		}
 		
 		//setTileMapPosition(GameState->TileMap, GameState->TileMapX, GameState->TileMapY);
-		moveTileMapPosition(GameState->TileMap, 0, 0);
+		moveTileMapPosition(TileMap, 0, 0);
 		if( GameState->PlayerX > Buffer->Width)
 		{
 			GameState->PlayerX = 0;
-			invertTitleMap(GameState->TileMap);
+
 		}
 		if( GameState->PlayerY > Buffer->Height)
 		{
 			GameState->PlayerY = 0;
-			invertTitleMap(GameState->TileMap);
+
 		}
 		
 		if( GameState->PlayerX < 0)
 		{
 			GameState->PlayerX = (real32)Buffer->Width;
-			invertTitleMap(GameState->TileMap);
+
 		}
 		if( GameState->PlayerY < 0)
 		{
 			GameState->PlayerY = (real32)Buffer->Height;
-			invertTitleMap(GameState->TileMap);
+
 		}
         if(GameState->tJump > 0)
         {
@@ -436,6 +544,13 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
 		{
 			GameState->GreenOffset =  GameState->BlueOffset;
 		}
+		
+		if(Controller->ActionUp.EndedDown)
+		{
+			loadTileMap = !loadTileMap;
+		}
+		
+		
 		if(ControllerIndex == 1){
 			if (Controller->ActionUp.EndedDown)
 			{
@@ -450,35 +565,34 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
 
     
 
-				  
     for(int Row = 0;
-        Row < 18;
+        Row < TILE_MAP_COUNT_Y;
         ++Row)
     {
         for(int Column = 0;
-            Column < 33;
+            Column < TILE_MAP_COUNT_X;
             ++Column)
         {
-            uint32 TileID = GameState->TileMap[Row][Column];
+            uint32 TileID = GetTileValueUnchecked(TileMap, Column, Row);
             real32 Gray = 0.5f;
             if(TileID == 1)
             {
                 Gray = 1.0f;
             }
 
-            real32 MinX = UpperLeftX + ((real32)Column)*TileWidth;
-            real32 MinY = UpperLeftY + ((real32)Row)*TileHeight;
-            real32 MaxX = MinX + TileWidth;
-            real32 MaxY = MinY + TileHeight;
-            DrawRectangle(Buffer, MinX , MinY , MaxX, MaxY , Gray, Gray, Gray);
+            real32 MinX = TileMap->UpperLeftX + ((real32)Column)*TileMap->TileWidth;
+            real32 MinY = TileMap->UpperLeftY + ((real32)Row)*TileMap->TileHeight;
+            real32 MaxX = MinX + TileMap->TileWidth;
+            real32 MaxY = MinY + TileMap->TileHeight;
+            DrawRectangle(Buffer, MinX, MinY, MaxX, MaxY, Gray, Gray, Gray);
         }
     }
     
     real32 PlayerR = 1.0f;
     real32 PlayerG = 1.0f;
     real32 PlayerB = 0.0f;
-    real32 PlayerWidth = 0.75f*TileWidth;
-    real32 PlayerHeight = TileHeight;
+
+
     real32 PlayerLeft = GameState->PlayerX - 0.5f*PlayerWidth;
     real32 PlayerTop = GameState->PlayerY - PlayerHeight;
     DrawRectangle(Buffer,
