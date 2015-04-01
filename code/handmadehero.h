@@ -80,6 +80,32 @@ typedef DEBUG_PLATFORM_WRITE_ENTIRE_FILE(debug_platform_write_entire_file);
 
 // TODO(casey): In the future, rendering _specifically_ will become a three-tiered abstraction!!!
 
+
+// TODO(casey): Is this ever necessary?
+struct raw_position
+{
+    int32 TileMapX;
+    int32 TileMapY;
+
+    // NOTE(casey): Tile-map relative X and Y
+    real32 X;
+    real32 Y;
+};
+
+struct canonical_position
+{
+    int32 TileMapX;
+    int32 TileMapY;
+
+    int32 TileX;
+    int32 TileY;
+
+    // NOTE(casey): This is tile-relative X and Y
+    // TODO(casey): These are still in pixels... :/
+    real32 TileRelX;
+    real32 TileRelY;
+};
+
 struct tile_map
 {
     int32 CountX;
@@ -218,6 +244,14 @@ typedef GAME_GET_SOUND_SAMPLES(game_get_sound_samples);
 
 struct world
 {
+    int32 CountX;
+    int32 CountY;
+    
+    real32 UpperLeftX;
+    real32 UpperLeftY;
+    real32 TileWidth;
+    real32 TileHeight;
+
     // TODO(casey): Beginner's sparseness
     int32 TileMapCountX;
     int32 TileMapCountY;
@@ -238,6 +272,9 @@ struct game_state
 	int32 TileMapY;
 	bool32 PlayerColor;
     real32 tJump;
+	
+	int32 PlayerTileMapX;
+    int32 PlayerTileMapY;
 	
 	tile_map TileMaps;
 };
