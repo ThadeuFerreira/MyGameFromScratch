@@ -219,42 +219,7 @@ GameOutputSound(game_state *GameState, game_sound_output_buffer *SoundBuffer, in
 		}
 }
 
-internal void
-RenderPlayer(game_Off_Screen_Buffer *Buffer, int PlayerX, int PlayerY, bool32 changeColor)
-{
-    uint8 *EndOfBuffer = (uint8 *)Buffer->Memory + Buffer->Pitch*Buffer->Height;
-	uint32 Color;
 
-	if (!changeColor){
-		Color = 0xFFFFFFFF;
-	}
-	else
-	{
-		Color = 0x0;
-	}
-    int Top = PlayerY;
-    int Bottom = PlayerY+10;
-    for(int X = PlayerX;
-        X < PlayerX+11;
-        ++X)
-    {
-        uint8 *Pixel = ((uint8 *)Buffer->Memory +
-                        X*Buffer->BytesPerPixel +
-                        Top*Buffer->Pitch);
-        for(int Y = Top;
-            Y < Bottom;
-            ++Y)
-        {
-            if((Pixel >= Buffer->Memory) &&
-               ((Pixel + 4) <= EndOfBuffer))
-            {
-                *(uint32 *)Pixel = Color;
-            }
-
-            Pixel += Buffer->Pitch;
-        }
-    }
-}
 
 internal void
 moveTileMapPosition(tile_map *TileMap, 	int32 TileMapX,	int32 TileMapY)
@@ -476,11 +441,6 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
             Memory->DEBUGPlatformWriteEntireFile(Thread, "test_out.out", File.ContentsSize, File.Contents);
             Memory->DEBUGPlatformFreeFileMemory(Thread, File.Contents);
         }
-        GameState->ToneHz = 256;
-		GameState->tSine = 0.0f;
-		
-		GameState->PlayerX = 100;
-        GameState->PlayerY = 100;
 
         // TODO(casey): This may be more appropriate to do in the platform layer
         Memory->IsInitialized = true;
@@ -498,9 +458,7 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
 		if(Controller->IsAnalog)
 		{
 			// NOTE(casey): Use analog movement tuning
-			GameState->BlueOffset -= (int)(4.0f*(Controller->RightStickAverageX));
-			GameState->GreenOffset += (int)(4.0f*(Controller->RightStickAverageY));
-			GameState->ToneHz = 256 + (int)(128.0f*(Controller->RightStickAverageY));
+
 		}
 		else
 		{
@@ -552,10 +510,6 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
             }
 		}
 
-		// Input.AButtonEndedDown;
-		// Input.AButtonHalfTransitionCount;
-		        // Input.AButtonEndedDown;
-        // Input.AButtonHalfTransitionCount;
 
         GameState->PlayerX += (10.0f*Controller->StickAverageX);
         GameState->PlayerY -= (10.0f*Controller->StickAverageY);
@@ -569,17 +523,6 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
 			loadTileMap = !loadTileMap;
 		}
 		
-		
-		if(ControllerIndex == 1){
-			if (Controller->ActionUp.EndedDown)
-			{
-				GameState->PlayerColor = true;
-			}
-			else
-			{
-				GameState->PlayerColor = false;
-			}
-		}
 	}
 
     
@@ -622,6 +565,6 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
 extern "C" GAME_GET_SOUND_SAMPLES(GameGetSoundSamples)
 {
     game_state *GameState = (game_state *)Memory->PermanentStorage;
-    GameOutputSound(GameState, SoundBuffer, GameState->ToneHz);
+    GameOutputSound(GameState, SoundBuffer, 400);
 }
 

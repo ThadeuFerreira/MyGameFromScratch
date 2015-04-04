@@ -261,22 +261,12 @@ struct world
 
 struct game_state
 {
-    int ToneHz;
-    int GreenOffset;
-    int BlueOffset;
-    
-    real32 tSine;
-	real32 PlayerX;
-    real32 PlayerY;
-	int32 TileMapX;
-	int32 TileMapY;
-	bool32 PlayerColor;
-    real32 tJump;
-	
-	int32 PlayerTileMapX;
+// TODO(casey): Player state should be canonical position now?
+    int32 PlayerTileMapX;
     int32 PlayerTileMapY;
-	
-	tile_map TileMaps;
+    
+    real32 PlayerX;
+    real32 PlayerY;
 };
 
 
