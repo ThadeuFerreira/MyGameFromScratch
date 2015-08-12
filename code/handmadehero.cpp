@@ -1,5 +1,6 @@
 
 #include "handmadehero.h"
+#include "handmade_intrinsics.h"
 
 
 typedef unsigned long DWORD;
@@ -7,43 +8,6 @@ typedef unsigned long DWORD;
 #define TILE_MAP_COUNT_X 33
 #define TILE_MAP_COUNT_Y 18
 
-inline int32
-TruncateReal32ToInt32(real32 Real32)
-{
-    int32 Result = (int32)Real32;
-    return(Result);
-}
-
-inline int32
-RoundReal32ToInt32(real32 Real32)
-{
-	int32 Result;
-	if(Real32 >= 0 ){
-		Result = (int32)(Real32 + 0.5f);
-	}
-	else
-	{
-		Result = (int32)(Real32 - 0.5f);
-	}
-    // TODO(casey): Intrinsic????
-    return(Result);
-}
-inline uint32
-RoundReal32ToUInt32(real32 Real32)
-{
-    uint32 Result = (uint32)(Real32 + 0.5f);
-    // TODO(casey): Intrinsic????
-    return(Result);
-}
-
-// TODO(casey): HOW TO IMPLEMENT THESE MATH FUNCTIONS!!!!
-#include "math.h"
-inline int32 
-FloorReal32ToInt32(real32 Real32)
-{
-    int32 Result = (int32)floorf(Real32);
-    return(Result);
-}
 
 inline uint32
 GetTileValueUnchecked(world *World, tile_map *TileMap, int32 TileX, int32 TileY)
@@ -299,10 +263,10 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
         {1, 1, 1, 1,  0, 0, 1, 1,  1, 1, 1, 1,  1, 1, 1, 1, 1, 1, 1, 1, 1,  1, 1, 1, 1,  1, 1, 1, 1,  1, 1, 1, 1},
         {1, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 1, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 1},
         {1, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 1, 0, 0, 0, 0, 1, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 1},
-        {1, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 1, 0, 0, 0, 0, 1, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 1},
-        {0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 1, 0, 0, 0, 0, 1, 0, 0,  0, 0, 0, 1,  0, 0, 0, 0,  0, 0, 0, 0},
-        {1, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 1, 0, 0, 0, 0, 1, 0, 0,  0, 0, 0, 1,  0, 0, 0, 0,  0, 0, 0, 1},
-        {1, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 1, 0, 0, 0, 0, 1, 0, 0,  0, 0, 0, 1,  0, 0, 0, 0,  0, 0, 0, 1},
+        {1, 0, 0, 0,  0, 0, 0, 0,  0, 0, 1, 0,  0, 1, 0, 0, 0, 0, 1, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 1},
+        {0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 1, 0,  0, 1, 0, 0, 0, 0, 1, 0, 0,  0, 0, 0, 1,  0, 0, 0, 0,  0, 0, 0, 0},
+        {1, 0, 0, 0,  0, 0, 0, 0,  0, 0, 1, 0,  0, 1, 0, 0, 0, 0, 1, 0, 0,  0, 0, 0, 1,  0, 0, 0, 0,  0, 0, 0, 1},
+        {1, 0, 0, 0,  0, 0, 0, 0,  0, 1, 0, 0,  0, 1, 0, 0, 0, 0, 1, 0, 0,  0, 0, 0, 1,  0, 0, 0, 0,  0, 0, 0, 1},
         {1, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 1, 0, 0, 0, 0, 1, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 1},
         {1, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 1, 0, 0, 0, 0, 1, 0, 0,  0, 0, 0, 1,  0, 0, 0, 0,  0, 0, 0, 1},
 		{1, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 1, 0, 0,  0, 0, 0, 1,  0, 0, 0, 0,  0, 0, 0, 1},
