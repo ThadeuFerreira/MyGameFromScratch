@@ -244,13 +244,14 @@ typedef GAME_GET_SOUND_SAMPLES(game_get_sound_samples);
 
 struct world
 {
+	real32 TileSideInMeters;
+    int32 TileSideInPixels;
+	
     int32 CountX;
     int32 CountY;
     
     real32 UpperLeftX;
     real32 UpperLeftY;
-    real32 TileWidth;
-    real32 TileHeight;
 
     // TODO(casey): Beginner's sparseness
     int32 TileMapCountX;
