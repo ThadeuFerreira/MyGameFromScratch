@@ -85,30 +85,63 @@ struct tile_map
 
     uint32 *Tiles;
 };
+struct tile_chunk
+{
+    uint32 *Tiles;
+};
 
 struct world
 {
-	real32 TileSideInMeters;
-    int32 TileSideInPixels;
-	
-	real32 MetersToPixels;
-	
-    int32 CountX;
-    int32 CountY;
+    uint32 ChunkShift;
+    uint32 ChunkMask;
+    uint32 ChunkDim;
     
-    real32 UpperLeftX;
-    real32 UpperLeftY;
+    real32 TileSideInMeters;
+    int32 TileSideInPixels;
+    real32 MetersToPixels;
 
     // TODO(casey): Beginner's sparseness
-    int32 TileMapCountX;
-    int32 TileMapCountY;
+    int32 TileChunkCountX;
+    int32 TileChunkCountY;
     
-    tile_map *TileMaps;
+    tile_chunk *TileChunks;
+};
+
+struct tile_chunk_position
+{
+    uint32 TileChunkX;
+    uint32 TileChunkY;
+
+    uint32 RelTileX;
+    uint32 RelTileY;
+};
+
+
+struct world_position
+{
+    /* TODO(casey):
+
+       Take the tile map x and y
+       and the tile x and y
+
+       and pack them into single 32-bit values for x and y
+       where there is some low bits for the tile index
+       and the high bits are the tile "page"
+
+       (NOTE we can eliminate the need for floor!)
+    */
+    uint32 AbsTileX;
+    uint32 AbsTileY;
+
+    // TODO(casey): Should these be from the center of a tile?
+    // TODO(casey): Rename to offset X and Y
+    real32 TileRelX;
+    real32 TileRelY;
 };
 
 struct game_state
 {
-	canonical_position PlayerP;
+	world_position PlayerP;
 };
 
 
