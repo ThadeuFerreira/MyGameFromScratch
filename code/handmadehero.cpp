@@ -164,8 +164,10 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
                 RandomChoice = RandomNumberTable[RandomNumberIndex++] % 3;
             }
             
+            bool32 CreatedZDoor = false;
             if(RandomChoice == 2)
             {
+                CreatedZDoor = true;
                 if(AbsTileZ == 0)
                 {
                     DoorUp = true;
@@ -237,15 +239,10 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
             DoorLeft = DoorRight;
             DoorBottom = DoorTop;
 
-            if(DoorUp)
+            if(CreatedZDoor)
             {
-                DoorDown = true;
-                DoorUp = false;
-            }
-            else if(DoorDown)
-            {
-                DoorUp = true;
-                DoorDown = false;
+                DoorDown = !DoorDown;
+                DoorUp = !DoorUp;
             }
             else
             {
@@ -283,7 +280,7 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
     world *World = GameState->World;        
     tile_map *TileMap = World->TileMap;
 	
-	int32 TileSideInPixels = 10;
+	int32 TileSideInPixels = 60;
     real32 MetersToPixels = (real32)TileSideInPixels / (real32)TileMap->TileSideInMeters;
 
     real32 LowerLeftX = -(real32)TileSideInPixels/2;
@@ -351,13 +348,32 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
                IsTileMapPointEmpty(TileMap, PlayerLeft) &&
                IsTileMapPointEmpty(TileMap, PlayerRight))
             {
+               if(!AreOnSameTile(&GameState->PlayerP, &NewPlayerP))
+                {
+                    uint32 NewTileValue = GetTileValue(TileMap, NewPlayerP);
+					uint32 val;
+					if(NewTileValue == 0)
+					{
+						val = 10;
+					}
+
+                    if(NewTileValue == 3)
+                    {
+                        ++NewPlayerP.AbsTileZ;
+                    }
+                    else if(NewTileValue == 4)
+                    {
+                        --NewPlayerP.AbsTileZ;
+                    }    
+                }
+                
                 GameState->PlayerP = NewPlayerP;
             }
 		}		
 	}
 
     DrawRectangle(Buffer, 0.0f, 0.0f, (real32)Buffer->Width, (real32)Buffer->Height,
-                  0.0f, 1.0f, 1.1f);
+                 0.5f, 0.5f, 0.0f);
     real32 ScreenCenterX = 0.5f*(real32)Buffer->Width;
     real32 ScreenCenterY = 0.5f*(real32)Buffer->Height;
 	
@@ -383,7 +399,7 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
 
                 if(TileID > 2)
                 {
-                    Gray = 1.0f;
+                    Gray = 0.0f;
                 }
 
                 if((Column == GameState->PlayerP.AbsTileX) &&
