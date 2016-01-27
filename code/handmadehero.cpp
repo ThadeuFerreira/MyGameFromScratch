@@ -5,6 +5,36 @@
 
 typedef unsigned long DWORD;
 
+internal void 
+GameOutputSound(game_state *GameState, game_sound_output_buffer *SoundBuffer, int toneHz)
+{
+		int16 toneVolume = 3000;
+		if (toneHz == 0)
+		{
+			toneHz = 440;
+		}
+		int16 wavePeriod = (int16)(SoundBuffer->samplesPerSecond/toneHz);
+		int16 *sampleOut = (int16*)SoundBuffer->samples;
+		for (DWORD sampleIndex = 0; sampleIndex < (DWORD)SoundBuffer->sampleCount; ++sampleIndex)
+		{
+#if HANDMADE_DEBUGSOUND
+			real32 sineValue = sin(GameState->tSine);
+			int16 sampleValue = (int16)(sineValue * toneVolume);
+#else
+			int16 sampleValue = 0;
+#endif
+			*sampleOut++ = sampleValue;
+			*sampleOut++ = sampleValue;
+#if HANDMADE_DEBUGSOUND
+			GameState->tSine += 2.0f*Pi32*1.0f / (real32)wavePeriod;
+			if(GameState->tSine > 2.0f*Pi32)
+			{
+				GameState->tSine -= 2.0f*Pi32;
+			}
+#endif
+		}
+}
+
 internal void
 DrawRectangle(game_Off_Screen_Buffer *Buffer,
               real32 RealMinX, real32 RealMinY, real32 RealMaxX, real32 RealMaxY,
@@ -58,35 +88,39 @@ DrawRectangle(game_Off_Screen_Buffer *Buffer,
     }
 }
 
-internal void 
-GameOutputSound(game_state *GameState, game_sound_output_buffer *SoundBuffer, int toneHz)
+#pragma pack(push, 1)
+struct bitmap_header
 {
-		int16 toneVolume = 3000;
-		if (toneHz == 0)
-		{
-			toneHz = 440;
-		}
-		int16 wavePeriod = (int16)(SoundBuffer->samplesPerSecond/toneHz);
-		int16 *sampleOut = (int16*)SoundBuffer->samples;
-		for (DWORD sampleIndex = 0; sampleIndex < (DWORD)SoundBuffer->sampleCount; ++sampleIndex)
-		{
-#if HANDMADE_DEBUGSOUND
-			real32 sineValue = sin(GameState->tSine);
-			int16 sampleValue = (int16)(sineValue * toneVolume);
-#else
-			int16 sampleValue = 0;
-#endif
-			*sampleOut++ = sampleValue;
-			*sampleOut++ = sampleValue;
-#if HANDMADE_DEBUGSOUND
-			GameState->tSine += 2.0f*Pi32*1.0f / (real32)wavePeriod;
-			if(GameState->tSine > 2.0f*Pi32)
-			{
-				GameState->tSine -= 2.0f*Pi32;
-			}
-#endif
-		}
+    uint16 FileType;
+    uint32 FileSize;
+    uint16 Reserved1;
+    uint16 Reserved2;
+    uint32 BitmapOffset;
+    uint32 Size;
+    int32 Width;
+    int32 Height;
+    uint16 Planes;
+    uint16 BitsPerPixel;
+};
+#pragma pack(pop)
+
+internal uint32 *
+DEBUGLoadBMP(thread_context *Thread, debug_platform_read_entire_file *ReadEntireFile, char *FileName)
+{
+    uint32 *Result = 0;
+    
+    debug_read_file_result ReadResult = ReadEntireFile(Thread, FileName);    
+    if(ReadResult.ContentsSize != 0)
+    {
+        bitmap_header *Header = (bitmap_header *)ReadResult.Contents;
+        uint32 *Pixels = (uint32 *)((uint8 *)ReadResult.Contents + Header->BitmapOffset);
+        Result = Pixels;
+    }
+
+    return(Result);
 }
+
+
 
 
 extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
@@ -104,6 +138,8 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
     game_state *GameState = (game_state *)Memory->PermanentStorage;
     if(!Memory->IsInitialized)
     {
+		GameState->PixelPointer = DEBUGLoadBMP(Thread, Memory->DEBUGPlatformReadEntireFile, "test/test_background.bmp");
+		 
         GameState->PlayerP.AbsTileX = 1;
         GameState->PlayerP.AbsTileY = 3;
         GameState->PlayerP.TileRelX = 5.0f;
@@ -141,12 +177,12 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
         uint32 AbsTileZ = 0;
 
         // TODO(casey): Replace all this with real world generation!
-        bool32 DoorLeft = true;
-        bool32 DoorRight = true;
-        bool32 DoorTop = true;
-        bool32 DoorBottom = true;
-        bool32 DoorUp = true;
-        bool32 DoorDown = true;
+        bool32 DoorLeft = false;
+        bool32 DoorRight = false;
+        bool32 DoorTop = false;
+        bool32 DoorBottom = false;
+        bool32 DoorUp = false;
+        bool32 DoorDown = false;
         for(uint32 ScreenIndex = 0;
             ScreenIndex < 100;
             ++ScreenIndex)
@@ -351,17 +387,13 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
                if(!AreOnSameTile(&GameState->PlayerP, &NewPlayerP))
                 {
                     uint32 NewTileValue = GetTileValue(TileMap, NewPlayerP);
-					uint32 val;
-					if(NewTileValue == 0)
-					{
-						val = 10;
-					}
+					
 
-                    if(NewTileValue == 3)
+                    if(NewTileValue == 3) //Door UP
                     {
                         ++NewPlayerP.AbsTileZ;
                     }
-                    else if(NewTileValue == 4)
+                    else if(NewTileValue == 4) //Door Down
                     {
                         --NewPlayerP.AbsTileZ;
                     }    
@@ -392,12 +424,12 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
             if(TileID > 0)
             {
                 real32 Gray = 0.5f;
-                if(TileID == 2)
+                if(TileID == 2) //Wall
                 {
                     Gray = 1.0f;
                 }
 
-                if(TileID > 2)
+                if(TileID > 2) //Stairs
                 {
                     Gray = 0.0f;
                 }
@@ -429,6 +461,22 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
                   PlayerLeft + MetersToPixels*PlayerWidth,
                   PlayerTop + MetersToPixels*PlayerHeight,
                   PlayerR, PlayerG, PlayerB);
+				  
+#if 1
+    uint32 *Source = GameState->PixelPointer;
+    uint32 *Dest = (uint32 *)Buffer->Memory;
+    for(int32 Y = 0;
+        Y < Buffer->Height;
+        ++Y)
+    {
+        for(int32 X = 0;
+            X < Buffer->Width;
+            ++X)
+        {
+            *Dest++ = *Source++;
+        }
+    }
+#endif
 }
 
 extern "C" GAME_GET_SOUND_SAMPLES(GameGetSoundSamples)
