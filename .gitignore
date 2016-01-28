@@ -33,6 +33,7 @@ build\
 *.ilk
 *.pdb
 *.bmp
+data\
 
 # =========================
 # Operating System Files
