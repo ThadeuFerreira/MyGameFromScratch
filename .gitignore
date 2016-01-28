@@ -28,12 +28,20 @@ build/
 \*\build\
 \*\*\build\
 build\
+\data\
+\*\data\
+\*\*\data\
+\data\test
+\*\data\test
+\*\*\data\test
+data\
+build\
 *.exe
 *.obj
 *.ilk
 *.pdb
 *.bmp
-data\
+
 
 # =========================
 # Operating System Files
