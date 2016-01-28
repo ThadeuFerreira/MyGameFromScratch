@@ -78,3 +78,4 @@ build/main_handmadehero.obj
 build/main_handmadehero.pdb
 build/vc120.pdb
 *.bmp
+*.wav
