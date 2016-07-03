@@ -55,7 +55,7 @@ struct Win32_output_sound
 	DWORD secondaryBufferSize = samplesPerSecond*bytesPerSample;
 	DWORD safetyBytes;
 	uint32 runningSampleIndex = 0;
-	real32 tSine;
+	
 
 };
 
