@@ -243,29 +243,28 @@ Win32GetLastWriteTime(char *Filename)
 }
 
 internal win32_game_code
-Win32LoadGameCode(char *SourceDLLName, char *TempDLLName, char *LockFileName)
+Win32LoadGameCode(char *SourceDLLName, char *TempDLLName)
 {
     win32_game_code Result = {};
 
-    WIN32_FILE_ATTRIBUTE_DATA Ignored;
-    if(!GetFileAttributesEx(LockFileName, GetFileExInfoStandard, &Ignored))
-    {
-        Result.DLLLastWriteTime = Win32GetLastWriteTime(SourceDLLName);
+    // TODO(casey): Need to get the proper path here!
+    // TODO(casey): Automatic determination of when updates are necessary.
 
-        CopyFile(SourceDLLName, TempDLLName, FALSE);
+    Result.DLLLastWriteTime = Win32GetLastWriteTime(SourceDLLName);
+
+    CopyFile(SourceDLLName, TempDLLName, FALSE);
     
-        Result.GameCodeDLL = LoadLibraryA(TempDLLName);
-        if(Result.GameCodeDLL)
-        {
-            Result.UpdateAndRender = (game_update_and_render *)
-                GetProcAddress(Result.GameCodeDLL, "GameUpdateAndRender");
+    Result.GameCodeDLL = LoadLibraryA(TempDLLName);
+    if(Result.GameCodeDLL)
+    {
+        Result.UpdateAndRender = (game_update_and_render *)
+            GetProcAddress(Result.GameCodeDLL, "GameUpdateAndRender");
         
-            Result.GetSoundSamples = (game_get_sound_samples *)
-                GetProcAddress(Result.GameCodeDLL, "GameGetSoundSamples");
+        Result.GetSoundSamples = (game_get_sound_samples *)
+            GetProcAddress(Result.GameCodeDLL, "GameGetSoundSamples");
 
-            Result.IsValid = (Result.UpdateAndRender &&
-                              Result.GetSoundSamples);
-        }
+        Result.IsValid = (Result.UpdateAndRender &&
+                          Result.GetSoundSamples);
     }
 
     if(!Result.IsValid)
@@ -938,10 +937,6 @@ Win32CreateInitialWindow(HINSTANCE Instance)
     char TempGameCodeDLLFullPath[WIN32_STATE_FILE_NAME_COUNT];
     Win32BuildEXEPathFileName(&Win32State, "handmade_temp.dll",
                               sizeof(TempGameCodeDLLFullPath), TempGameCodeDLLFullPath);
-							  
-	char GameCodeLockFullPath[WIN32_STATE_FILE_NAME_COUNT];
-    Win32BuildEXEPathFileName(&Win32State, "lock.tmp",
-                              sizeof(GameCodeLockFullPath), GameCodeLockFullPath);
 	WNDCLASSA WindowClass = {};
 	
 	 // NOTE(casey): Set the Windows scheduler granularity to 1ms
@@ -1101,8 +1096,7 @@ Win32CreateInitialWindow(HINSTANCE Instance)
 				DWORD LastPlayCursor = 0;
 				
                 win32_game_code Game = Win32LoadGameCode(SourceGameCodeDLLFullPath,
-                                                         TempGameCodeDLLFullPath,
-														 GameCodeLockFullPath);
+                                                         TempGameCodeDLLFullPath);
                 uint32 LoadCounter = 0;
 				
 				while (GlobalRunning)
@@ -1113,8 +1107,7 @@ Win32CreateInitialWindow(HINSTANCE Instance)
                     {
                         Win32UnloadGameCode(&Game);
                         Game = Win32LoadGameCode(SourceGameCodeDLLFullPath,
-                                                 TempGameCodeDLLFullPath,
-												 GameCodeLockFullPath);
+                                                 TempGameCodeDLLFullPath);
                         LoadCounter = 0;
                     }
 					
