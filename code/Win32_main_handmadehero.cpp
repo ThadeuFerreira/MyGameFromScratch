@@ -1593,7 +1593,7 @@ Win32CreateInitialWindow(HINSTANCE Instance)
 						NewInput = OldInput;
 						OldInput = Temp;
 						
-#if 0
+
 						uint64 EndCycleCount = __rdtsc();
 						uint64 CyclesElapsed = EndCycleCount - LastCycleCount;
 						LastCycleCount = EndCycleCount;
@@ -1605,7 +1605,7 @@ Win32CreateInitialWindow(HINSTANCE Instance)
 						_snprintf_s(FPSBuffer, sizeof(FPSBuffer),
 									"%.02fms/f,  %.02ff/s,  %.02fmc/f\n", MSPerFrame, FPS, MCPF);
 						OutputDebugStringA(FPSBuffer);
-#endif					
+						
 	#if HANDMADE_INTERNAL
 							++DebugTimeMarkerIndex;
 							if(DebugTimeMarkerIndex == ArrayCount(DebugTimeMarkers))
