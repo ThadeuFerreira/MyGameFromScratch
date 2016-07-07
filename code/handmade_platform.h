@@ -184,7 +184,7 @@ struct game_controller_input
 };
 
 
-struct ButtonActions
+typedef struct ButtonActions
 {
 	bool32 Up;
 	bool32 Down;
@@ -199,9 +199,9 @@ struct ButtonActions
 	
 	int16 StickX;
 	int16 StickY;
-};
+} ButtonActions;
 
-struct game_input
+typedef struct game_input
 {
     game_button_state MouseButtons[5];
     int32 MouseX, MouseY, MouseZ;
@@ -209,9 +209,9 @@ struct game_input
 	real32 dtForFrame;
 	
 	game_controller_input Controllers[5];
-};
+} game_input;
 
-struct game_memory
+typedef struct game_memory
 {
     bool32 IsInitialized;
 
@@ -224,7 +224,7 @@ struct game_memory
 	debug_platform_free_file_memory *DEBUGPlatformFreeFileMemory;
 	debug_platform_read_entire_file *DEBUGPlatformReadEntireFile;
     debug_platform_write_entire_file *DEBUGPlatformWriteEntireFile;
-};
+} game_memory;
 
 #define GAME_UPDATE_AND_RENDER(name) void name(thread_context *Thread, game_memory *Memory, game_input *Input, game_Off_Screen_Buffer *Buffer)
 typedef GAME_UPDATE_AND_RENDER(game_update_and_render);

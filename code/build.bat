@@ -16,7 +16,11 @@ REM 64-bit build
 del *.pdb > NUL 2> NUL
 REM Optimization switches /O2
 echo WAITING FOR PDB > lock.tmp
-cl %CommonCompilerFlags% c:\handmadehero\HandMadeHero\code\handmadehero.cpp -Fmhandmadehero.map -LD /link -incremental:no -opt:ref -PDB:%PdbFileName% -EXPORT:GameGetSoundSamples -EXPORT:GameUpdateAndRender
+
+cl %CommonCompilerFlags% ..\..\HandMadeHero\code\handmadehero.cpp -Fmhandmadehero.map -LD /link -incremental:no -opt:ref -PDB:%PdbFileName% -EXPORT:GameGetSoundSamples -EXPORT:GameUpdateAndRender
+
+
 del lock.tmp
-cl %CommonCompilerFlags% c:\handmadehero\HandMadeHero\code\Win32_main_handmadehero.cpp -FmWin32_main_handmadehero.map /link %CommonLinkerFlags%
+
+cl %CommonCompilerFlags% ..\..\HandMadeHero\code\Win32_main_handmadehero.cpp -FmWin32_main_handmadehero.map /link %CommonLinkerFlags%
 popd

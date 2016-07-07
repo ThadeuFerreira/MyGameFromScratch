@@ -243,6 +243,39 @@ Win32GetLastWriteTime(char *Filename)
 
     return(LastWriteTime);
 }
+#include <strsafe.h>
+void ErrorExit(LPTSTR lpszFunction) 
+{ 
+    // Retrieve the system error message for the last-error code
+
+    LPVOID lpMsgBuf;
+    LPVOID lpDisplayBuf;
+    DWORD dw = GetLastError(); 
+
+    FormatMessage(
+        FORMAT_MESSAGE_ALLOCATE_BUFFER | 
+        FORMAT_MESSAGE_FROM_SYSTEM |
+        FORMAT_MESSAGE_IGNORE_INSERTS,
+        NULL,
+        dw,
+        MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+        (LPTSTR) &lpMsgBuf,
+        0, NULL );
+
+    // Display the error message and exit the process
+
+    lpDisplayBuf = (LPVOID)LocalAlloc(LMEM_ZEROINIT, 
+        (lstrlen((LPCTSTR)lpMsgBuf) + lstrlen((LPCTSTR)lpszFunction) + 40) * sizeof(TCHAR)); 
+    StringCchPrintf((LPTSTR)lpDisplayBuf, 
+        LocalSize(lpDisplayBuf) / sizeof(TCHAR),
+        TEXT("%s failed with error %d: %s "), 
+        lpszFunction, dw, lpMsgBuf); 
+    MessageBox(NULL, (LPCTSTR)lpDisplayBuf, TEXT("Error"), MB_OK); 
+
+    LocalFree(lpMsgBuf);
+    LocalFree(lpDisplayBuf);
+    ExitProcess(dw); 
+}
 
 internal win32_game_code
 Win32LoadGameCode(char *SourceDLLName, char *TempDLLName, char *LockFileName)
@@ -250,7 +283,8 @@ Win32LoadGameCode(char *SourceDLLName, char *TempDLLName, char *LockFileName)
     win32_game_code Result = {};
 
     WIN32_FILE_ATTRIBUTE_DATA Ignored;
-    if(!GetFileAttributesEx(LockFileName, GetFileExInfoStandard, &Ignored))
+	uint32 isLockFile = GetFileAttributesEx(LockFileName, GetFileExInfoStandard, &Ignored);
+    if(!isLockFile)
     {
         Result.DLLLastWriteTime = Win32GetLastWriteTime(SourceDLLName);
 
@@ -269,11 +303,16 @@ Win32LoadGameCode(char *SourceDLLName, char *TempDLLName, char *LockFileName)
                               Result.GetSoundSamples);
         }
     }
-
+	else{	
+		OutputDebugStringA("LOCK FILE NOT FOUND!!!\n");
+	}
+	DWORD e1 = GetLastError();
+	DWORD e;
     if(!Result.IsValid)
     {
         Result.UpdateAndRender = 0;
         Result.GetSoundSamples = 0;
+		e = GetLastError();
     }
 
     return(Result);
@@ -1192,7 +1231,7 @@ Win32CreateInitialWindow(HINSTANCE Instance)
 				int64 LastCycleCount =  __rdtsc();
 				
 				DWORD LastPlayCursor = 0;
-				
+				FILETIME OldLockFileTime = Win32GetLastWriteTime(GameCodeLockFullPath);
                 win32_game_code Game = Win32LoadGameCode(SourceGameCodeDLLFullPath,
                                                          TempGameCodeDLLFullPath,
 														 GameCodeLockFullPath);
@@ -1200,8 +1239,14 @@ Win32CreateInitialWindow(HINSTANCE Instance)
 				
 				while (GlobalRunning)
 				{
-				
+					FILETIME LockFileTime = Win32GetLastWriteTime(GameCodeLockFullPath);
+					if (CompareFileTime(&OldLockFileTime , &LockFileTime)){
+							OutputDebugStringA("LOCK FILE TIME IS NOT THE SAME\n");
+							Sleep(1000);							
+					}
+					NewInput->dtForFrame = TargetSecondsPerFrame;				
                     FILETIME NewDLLWriteTime = Win32GetLastWriteTime(SourceGameCodeDLLFullPath);
+										
                     if(CompareFileTime(&NewDLLWriteTime, &Game.DLLLastWriteTime) != 0)
                     {
                         Win32UnloadGameCode(&Game);
@@ -1234,7 +1279,6 @@ Win32CreateInitialWindow(HINSTANCE Instance)
 					    POINT MouseP;
                         GetCursorPos(&MouseP);
                         ScreenToClient(Window, &MouseP);
-						NewInput->dtForFrame = TargetSecondsPerFrame;
                         NewInput->MouseX = MouseP.x;
                         NewInput->MouseY = MouseP.y;
                         NewInput->MouseZ = 0; // TODO(casey): Support mousewheel?
@@ -1394,8 +1438,9 @@ Win32CreateInitialWindow(HINSTANCE Instance)
 								Win32PlayBackInput(&Win32State, NewInput);
 							}
 							
-							
 							Game.UpdateAndRender(&Thread, &GameMemory, NewInput, &Buffer);
+							
+							DWORD e = GetLastError();
 							LARGE_INTEGER AudioWallClock = Win32GetWallClock();
 							real32 FromBeginToAudioSeconds = Win32GetSecondsElapsed(FlipWallClock, AudioWallClock);
 
