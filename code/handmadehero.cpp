@@ -565,20 +565,57 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
             PlayerRight.Offset.X += 0.5f*PlayerWidth;
             PlayerRight = RecanonicalizePosition(TileMap, PlayerRight);
             
-            if(IsTileMapPointEmpty(TileMap, NewPlayerP) &&
-               IsTileMapPointEmpty(TileMap, PlayerLeft) &&
-               IsTileMapPointEmpty(TileMap, PlayerRight))
+            bool32 Collided = false;
+            tile_map_position ColP = {};
+            if(!IsTileMapPointEmpty(TileMap, NewPlayerP))
             {
-               if(!AreOnSameTile(&GameState->PlayerP, &NewPlayerP))
+                ColP = NewPlayerP;
+                Collided = true;
+            }
+            if(!IsTileMapPointEmpty(TileMap, PlayerLeft))
+            {
+                ColP = PlayerLeft;
+                Collided = true;
+            }
+            if(!IsTileMapPointEmpty(TileMap, PlayerRight))
+            {
+                ColP = PlayerRight;
+                Collided = true;
+            }
+            
+            if(Collided)
+            {
+                v2 r = {0,0};
+                if(ColP.AbsTileX < GameState->PlayerP.AbsTileX)
+                {
+                    r = v2{1, 0};
+                }
+                if(ColP.AbsTileX > GameState->PlayerP.AbsTileX)
+                {
+                    r = v2{-1, 0};
+                }
+                if(ColP.AbsTileY < GameState->PlayerP.AbsTileY)
+                {
+                    r = v2{0, 1};
+                }
+                if(ColP.AbsTileY > GameState->PlayerP.AbsTileY)
+                {
+                    r = v2{0, -1};
+                }
+
+                GameState->dPlayerP = GameState->dPlayerP - 1.1f*Inner(GameState->dPlayerP, r)*r;
+            }
+            else
+            {                
+                if(!AreOnSameTile(&GameState->PlayerP, &NewPlayerP))
                 {
                     uint32 NewTileValue = GetTileValue(TileMap, NewPlayerP);
-					
 
-                    if(NewTileValue == 3) //Door UP
+                    if(NewTileValue == 3)
                     {
                         ++NewPlayerP.AbsTileZ;
                     }
-                    else if(NewTileValue == 4) //Door Down
+                    else if(NewTileValue == 4)
                     {
                         --NewPlayerP.AbsTileZ;
                     }    
@@ -680,9 +717,7 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
     DrawBitmap(Buffer, &HeroBitmaps->Torso, PlayerGroundPointX, PlayerGroundPointY, HeroBitmaps->AlignX, HeroBitmaps->AlignY);
     DrawBitmap(Buffer, &HeroBitmaps->Cape, PlayerGroundPointX, PlayerGroundPointY, HeroBitmaps->AlignX, HeroBitmaps->AlignY);
     DrawBitmap(Buffer, &HeroBitmaps->Head, PlayerGroundPointX, PlayerGroundPointY, HeroBitmaps->AlignX, HeroBitmaps->AlignY);
-	//DrawBitmap(Buffer, &HeroBitmaps->Head, PlayerGroundPointX + 30, PlayerGroundPointY, HeroBitmaps->AlignX, HeroBitmaps->AlignY);
 }
-
 extern "C" GAME_GET_SOUND_SAMPLES(GameGetSoundSamples)
 {
     game_state *GameState = (game_state *)Memory->PermanentStorage;

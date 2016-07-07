@@ -1231,7 +1231,9 @@ Win32CreateInitialWindow(HINSTANCE Instance)
 				int64 LastCycleCount =  __rdtsc();
 				
 				DWORD LastPlayCursor = 0;
+#if HANDMADE_INTERNAL
 				FILETIME OldLockFileTime = Win32GetLastWriteTime(GameCodeLockFullPath);
+#endif
                 win32_game_code Game = Win32LoadGameCode(SourceGameCodeDLLFullPath,
                                                          TempGameCodeDLLFullPath,
 														 GameCodeLockFullPath);
@@ -1239,11 +1241,14 @@ Win32CreateInitialWindow(HINSTANCE Instance)
 				
 				while (GlobalRunning)
 				{
+#if HANDMADE_INTERNAL
 					FILETIME LockFileTime = Win32GetLastWriteTime(GameCodeLockFullPath);
 					if (CompareFileTime(&OldLockFileTime , &LockFileTime)){
 							OutputDebugStringA("LOCK FILE TIME IS NOT THE SAME\n");
+							//NOTE(Thadeu) this is a workaround for live coding crashing
 							Sleep(1000);							
 					}
+#endif
 					NewInput->dtForFrame = TargetSecondsPerFrame;				
                     FILETIME NewDLLWriteTime = Win32GetLastWriteTime(SourceGameCodeDLLFullPath);
 										
