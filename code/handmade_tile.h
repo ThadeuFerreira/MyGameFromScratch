@@ -7,7 +7,8 @@
    $Notice: (C) Copyright 2014 by Molly Rocket, Inc. All Rights Reserved. $
    ======================================================================== */
 
-   struct tile_map_difference
+// TODO(casey): Replace this with a v3 once we get to v3
+struct tile_map_difference
 {
     v2 dXY;
     real32 dZ;
