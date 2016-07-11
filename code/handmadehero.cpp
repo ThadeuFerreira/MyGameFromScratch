@@ -436,6 +436,7 @@ MovePlayer(game_state *GameState, entity *Entity, real32 dt, v2 ddP, real32 ddV)
         }
     }            
 
+	
     NewPlayerP = OldPlayerP;
     NewPlayerP.Offset += tMin*PlayerDelta;
     Entity->P = NewPlayerP;
@@ -445,9 +446,9 @@ MovePlayer(game_state *GameState, entity *Entity, real32 dt, v2 ddP, real32 ddV)
     //
     // NOTE(casey): Update camera/player Z based on last movement.
     //
-    if(!AreOnSameTile(&OldPlayerP, &Entity->P))
+    if(!AreOnSameTile(&NewPlayerP, &Entity->P))
     {
-        uint32 NewTileValue = GetTileValue(TileMap, Entity->P);
+        uint32 NewTileValue = GetTileValue(TileMap, NewPlayerP);
 
         if(NewTileValue == 3)
         {

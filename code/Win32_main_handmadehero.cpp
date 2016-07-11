@@ -1643,7 +1643,7 @@ Win32CreateInitialWindow(HINSTANCE Instance)
 						NewInput = OldInput;
 						OldInput = Temp;
 						
-#if 0
+#if 1
 						uint64 EndCycleCount = __rdtsc();
 						uint64 CyclesElapsed = EndCycleCount - LastCycleCount;
 						LastCycleCount = EndCycleCount;
