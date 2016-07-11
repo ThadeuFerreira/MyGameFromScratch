@@ -2,6 +2,9 @@
 
 #include "handmade_platform.h"
 
+#define Minimum(A, B) ((A < B) ? (A) : (B))
+#define Maximum(A, B) ((A > B) ? (A) : (B))
+
 /*
   NOTE(casey): Services that the game provides to the platform layer.
   (this may expand in the future - sound on separate thread, etc.)
