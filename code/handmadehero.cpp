@@ -275,7 +275,7 @@ InitializePlayer(game_state *GameState, uint32 EntityIndex)
     Entity->Exists = true;
     Entity->P.AbsTileX = 1;
     Entity->P.AbsTileY = 3;
-    Entity->P.Offset_.X = 0;
+    Entity->P.Offset_.X = 1;
     Entity->P.Offset_.Y = 0;
     Entity->Height = 1.4f;
     Entity->Width = 0.75f*Entity->Height;
@@ -334,8 +334,6 @@ MovePlayer(game_state *GameState, entity *Entity, real32 dt, v2 ddP, real32 ddV)
     ddP *= PlayerSpeed;
 
     // TODO(casey): ODE here!
-
-
     ddP += -8.0f*Entity->dP;
 
     tile_map_position OldPlayerP = Entity->P;
@@ -343,9 +341,7 @@ MovePlayer(game_state *GameState, entity *Entity, real32 dt, v2 ddP, real32 ddV)
                       Entity->dP*dt);
     Entity->dP = ddP*dt + Entity->dP;
     tile_map_position NewPlayerP = Offset(TileMap, OldPlayerP, PlayerDelta);
-
-
-
+	
 #if 0
     tile_map_position PlayerLeft = NewPlayerP;
     PlayerLeft.Offset_.X -= 0.5f*Entity->Width;
@@ -602,8 +598,14 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
         uint32 RandomNumberIndex = 0;
         uint32 TilesPerWidth = 17;
         uint32 TilesPerHeight = 9;
+#if 0
+        // TODO(casey): Waiting for full sparseness
+        uint32 ScreenX = INT32_MAX / 2;
+        uint32 ScreenY = INT32_MAX / 2;
+#else
         uint32 ScreenX = 0;
         uint32 ScreenY = 0;
+#endif
         uint32 AbsTileZ = 0;
 
         // TODO(casey): Replace all this with real world generation!
