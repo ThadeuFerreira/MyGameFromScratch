@@ -539,7 +539,8 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
 		AddEntity(GameState);
         GameState->Backdrop =
             DEBUGLoadBMP(Thread, Memory->DEBUGPlatformReadEntireFile, "test/test_background.bmp");
-        
+        GameState->Shadow =
+            DEBUGLoadBMP(Thread, Memory->DEBUGPlatformReadEntireFile, "test/test_hero_shadow.bmp");
 		hero_bitmaps *Bitmap;
 
         Bitmap = GameState->HeroBitmaps;
