@@ -99,6 +99,17 @@ GetChunkPositionFor(tile_map *TileMap, uint32 AbsTileX, uint32 AbsTileY, uint32 
 
     return(Result);
 }
+inline tile_map_position
+MapIntoTileSpace(tile_map *TileMap, tile_map_position BasePos, v2 Offset)
+{
+    tile_map_position Result = BasePos;
+
+    Result.Offset_ += Offset;
+    RecanonicalizeCoord(TileMap, &Result.AbsTileX, &Result.Offset_.X);
+    RecanonicalizeCoord(TileMap, &Result.AbsTileY, &Result.Offset_.Y);
+    
+    return(Result);
+}
 
 inline bool32
 AreOnSameTile(tile_map_position *A, tile_map_position *B)
