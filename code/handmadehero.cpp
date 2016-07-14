@@ -267,6 +267,7 @@ internal void
 ChangeEntityResidence(game_state *GameState, uint32 EntityIndex, entity_residence Residence)
 {
     // TODO(casey): Implement this!
+	
     if(Residence == EntityResidence_High)
     {
         if(GameState->EntityResidence[EntityIndex] != EntityResidence_High)
