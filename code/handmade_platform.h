@@ -44,6 +44,8 @@ extern "C" {
     
 #include <stdint.h>
 
+#define InvalidCodePath Assert(!"InvalidCodePath");
+
 #define internal static 
 #define local_persist static 
 #define global_variable static
