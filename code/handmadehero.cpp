@@ -351,7 +351,7 @@ MakeEntityLowFrequency(game_state *GameState, uint32 LowIndex)
 }
 
 inline void
-OffsetAndCheckFrequencyByArea(game_state *GameState, v2 Offset, rectangle2 CameraBounds)
+OffsetAndCheckFrequencyByArea(game_state *GameState, v2 Offset, rectangle2 HighFrequencyBounds)
 {
     for(uint32 EntityIndex = 1;
         EntityIndex < GameState->HighEntityCount;
@@ -360,7 +360,7 @@ OffsetAndCheckFrequencyByArea(game_state *GameState, v2 Offset, rectangle2 Camer
         high_entity *High = GameState->HighEntities_ + EntityIndex;
 
         High->P += Offset;
-        if(IsInRectangle(CameraBounds, High->P))
+        if(IsInRectangle(HighFrequencyBounds, High->P))
         {
             ++EntityIndex;
         }
@@ -959,7 +959,7 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
     real32 ScreenCenterX = 0.5f*(real32)Buffer->Width;
     real32 ScreenCenterY = 0.5f*(real32)Buffer->Height;
 #if 0	
-	 for(int32 RelRow = -10;
+	     for(int32 RelRow = -10;
         RelRow < 10;
         ++RelRow)
     {
@@ -969,28 +969,25 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
         {
             uint32 Column = GameState->CameraP.AbsTileX + RelColumn;
             uint32 Row = GameState->CameraP.AbsTileY + RelRow;
-            uint32 TileID = GetTileValue(TileMap, Column, Row, GameState->CameraP.AbsTileZ);
+            uint32 TileID = GetTileValue(World, Column, Row, GameState->CameraP.AbsTileZ);
 
             if(TileID > 1)
             {
-                real32 Gray1 = 0.5f;
-				real32 Gray2 = 0.5f;
-				real32 Gray3 = 0.5f;
-                if(TileID == 2) //Wall
+                real32 Gray = 0.5f;
+                if(TileID == 2)
                 {
-                    Gray1 = 1.0f;
+                    Gray = 1.0f;
                 }
 
-                if(TileID > 2) //Stairs
+                if(TileID > 2)
                 {
-                    Gray2 = 0.0f;
+                    Gray = 0.25f;
                 }
 
-
-               if((Column == GameState->CameraP.AbsTileX) &&
+                if((Column == GameState->CameraP.AbsTileX) &&
                    (Row == GameState->CameraP.AbsTileY))
                 {
-                    Gray1 = 0.0f;
+                    Gray = 0.0f;
                 }
 
                 v2 TileSide = {0.5f*TileSideInPixels, 0.5f*TileSideInPixels};
@@ -998,8 +995,8 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
                           ScreenCenterY + MetersToPixels*GameState->CameraP.Offset_.Y - ((real32)RelRow)*TileSideInPixels};
                 v2 Min = Cen - 0.9f*TileSide;
                 v2 Max = Cen + 0.9f*TileSide;
-                DrawRectangle(Buffer, Min, Max, Gray1, Gray2, Gray3);
-			}
+                DrawRectangle(Buffer, Min, Max, Gray, Gray, Gray);
+            }
         }
     }
  #endif
