@@ -1160,7 +1160,7 @@ Win32CreateInitialWindow(HINSTANCE Instance)
 #endif
             
             game_memory GameMemory = {};
-            GameMemory.PermanentStorageSize = Megabytes(64);
+            GameMemory.PermanentStorageSize = Megabytes(256);
             GameMemory.TransientStorageSize = Megabytes(100);
 			GameMemory.DEBUGPlatformFreeFileMemory = DEBUGPlatformFreeFileMemory;
             GameMemory.DEBUGPlatformReadEntireFile = DEBUGPlatformReadEntireFile;
