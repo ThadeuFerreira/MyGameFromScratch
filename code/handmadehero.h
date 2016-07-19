@@ -66,7 +66,7 @@ struct high_entity
 {
     v2 P; // NOTE(casey): Relative to the camera!
     v2 dP;
-    uint32 AbsTileZ;
+    uint32 ChunkZ;
     uint32 FacingDirection;
 
     real32 Z;
@@ -90,7 +90,7 @@ struct low_entity
 
     // NOTE(casey): This is for "stairs"
     bool32 Collides;
-    int32 dAbsTileZ;
+    int32 dChunkZ;
 
     uint32 HighEntityIndex;
 };
