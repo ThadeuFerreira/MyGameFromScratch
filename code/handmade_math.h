@@ -16,7 +16,32 @@ union v2
     real32 E[2];
 };
 
-// TODO(casey): Consider v2 A = v2{5, 3}; ?
+union v3
+{
+    struct
+    {
+        real32 X, Y, Z;
+    };
+    struct
+    {
+        real32 R, G, B;
+    };
+    real32 E[3];
+};
+
+union v4
+{
+    struct
+    {
+        real32 X, Y, Z, W;
+    };
+    struct
+    {
+        real32 R, G, B, A;
+    };
+    real32 E[4];
+};
+
 inline v2
 V2(real32 X, real32 Y)
 {
@@ -24,6 +49,31 @@ V2(real32 X, real32 Y)
 
     Result.X = X;
     Result.Y = Y;
+
+    return(Result);
+}
+
+inline v3
+V3(real32 X, real32 Y, real32 Z)
+{
+    v3 Result;
+
+    Result.X = X;
+    Result.Y = Y;
+    Result.Z = Z;
+
+    return(Result);
+}
+
+inline v4
+V4(real32 X, real32 Y, real32 Z, real32 W)
+{
+    v4 Result;
+
+    Result.X = X;
+    Result.Y = Y;
+    Result.Z = Z;
+    Result.W = W;
 
     return(Result);
 }
@@ -119,6 +169,7 @@ LengthSq(v2 A)
 
     return(Result);
 }
+
 struct rectangle2
 {
     v2 Min;
@@ -145,7 +196,6 @@ GetCenter(rectangle2 Rect)
     v2 Result = 0.5f*(Rect.Min + Rect.Max);
     return(Result);
 }
-
 
 inline rectangle2
 RectMinMax(v2 Min, v2 Max)
@@ -198,5 +248,6 @@ IsInRectangle(rectangle2 Rectangle, v2 Test)
 
     return(Result);
 }
+
 #define HANDMADE_MATH_H
 #endif

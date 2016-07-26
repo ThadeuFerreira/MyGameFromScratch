@@ -85,6 +85,14 @@ enum entity_type
     EntityType_Monstar,
 };
 
+#define HIT_POINT_SUB_COUNT 4
+struct hit_point
+{
+    // TODO(casey): Bake this down into one variable
+    uint8 Flags;
+    uint8 FilledAmount;
+};
+
 struct low_entity
 {
     entity_type Type;
@@ -94,9 +102,13 @@ struct low_entity
 
     // NOTE(casey): This is for "stairs"
     bool32 Collides;
-    int32 dChunkZ;
+    int32 dAbsTileZ;
 
     uint32 HighEntityIndex;
+
+    // TODO(casey): Should hitpoints themselves be entities?
+    uint32 HitPointMax;
+    hit_point HitPoint[16];
 };
 
 
@@ -120,13 +132,10 @@ struct entity_visible_piece
     loaded_bitmap *Bitmap;
     v2 Offset;
     real32 OffsetZ;
-    real32 Alpha;
-};
+    real32 EntityZC;
 
-struct entity_visible_piece_group
-{
-    uint32 PieceCount;
-    entity_visible_piece Pieces[8];
+    real32 R, G, B, A;
+    v2 Dim;
 };
 
 struct game_state
@@ -151,6 +160,17 @@ struct game_state
     hero_bitmaps HeroBitmaps[4];
 
     loaded_bitmap Tree;
+    real32 MetersToPixels;
+};
+
+// TODO(casey): This is dumb, this should just be part of
+// the renderer pushbuffer - add correction of coordinates
+// in there and be done with it.
+struct entity_visible_piece_group
+{
+    game_state *GameState;
+    uint32 PieceCount;
+    entity_visible_piece Pieces[32];
 };
 
 
