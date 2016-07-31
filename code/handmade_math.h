@@ -6,7 +6,7 @@
    $Creator: Casey Muratori $
    $Notice: (C) Copyright 2014 by Molly Rocket, Inc. All Rights Reserved. $
    ======================================================================== */
-
+#include <math.h>
 union v2
 {
     struct
@@ -167,6 +167,12 @@ LengthSq(v2 A)
 {
     real32 Result = Inner(A, A);
 
+    return(Result);
+}
+inline real32
+Length(v2 A)
+{
+    real32 Result = SquareRoot(LengthSq(A));
     return(Result);
 }
 
