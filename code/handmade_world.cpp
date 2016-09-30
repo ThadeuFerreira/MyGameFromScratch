@@ -57,6 +57,7 @@ AreInSameChunk(world *World, world_position *A, world_position *B)
                      (A->ChunkY == B->ChunkY) &&
                      (A->ChunkZ == B->ChunkZ));
 
+
     return(Result);
 }
 
