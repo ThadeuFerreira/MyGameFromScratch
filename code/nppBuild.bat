@@ -1,3 +1,3 @@
 @echo off
-call c:\\handmadehero\\HandMadeHero\\misc\\shell.bat
-call c:\\handmadehero\\HandMadeHero\\code\\build.bat
+call c:\\MyGameFromScratch\\misc\\shell.bat
+call c:\\MyGameFromScratch\\code\\build.bat

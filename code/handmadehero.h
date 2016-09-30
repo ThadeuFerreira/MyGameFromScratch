@@ -14,7 +14,6 @@
 
 // TODO(casey): In the future, rendering _specifically_ will become a three-tiered abstraction!!!
 
-
 struct memory_arena
 {
     memory_index Size;

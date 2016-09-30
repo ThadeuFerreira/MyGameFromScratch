@@ -1246,7 +1246,7 @@ Win32CreateInitialWindow(HINSTANCE Instance)
 					if (CompareFileTime(&OldLockFileTime , &LockFileTime)){
 							OutputDebugStringA("LOCK FILE TIME IS NOT THE SAME\n");
 							//NOTE(Thadeu) this is a workaround for live coding crashing
-							Sleep(1000);							
+							Sleep(5000);							
 					}
 #endif
 					NewInput->dtForFrame = TargetSecondsPerFrame;				
