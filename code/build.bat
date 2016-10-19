@@ -18,10 +18,10 @@ REM Optimization switches /O2
 timeout 5
 echo WAITING FOR PDB > lock.tmp
 
-cl %CommonCompilerFlags% ..\code\handmadehero.cpp -Fmhandmadehero.map -LD /link -incremental:no -opt:ref -PDB:%PdbFileName% -EXPORT:GameGetSoundSamples -EXPORT:GameUpdateAndRender
+cl %CommonCompilerFlags% C:\MyGameFromScratch\code\handmadehero.cpp -Fmhandmadehero.map -LD /link -incremental:no -opt:ref -PDB:%PdbFileName% -EXPORT:GameGetSoundSamples -EXPORT:GameUpdateAndRender
 
 
 del lock.tmp
 
-cl %CommonCompilerFlags% ..\code\Win32_main_handmadehero.cpp -FmWin32_main_handmadehero.map /link %CommonLinkerFlags%
+cl %CommonCompilerFlags% C:\MyGameFromScratch\code\Win32_main_handmadehero.cpp -FmWin32_main_handmadehero.map /link %CommonLinkerFlags%
 popd
